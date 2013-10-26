@@ -23,6 +23,7 @@ set(sources
 	vm/Dictionary.c
 	vm/Entry.c
 	vm/Exception.c
+	vm/FreeList.c
 	vm/GarbageCollector.c
 	vm/Handle.c
 	vm/Heap.c

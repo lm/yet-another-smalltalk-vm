@@ -2,6 +2,7 @@
 #define PAGE_H
 
 #include "Object.h"
+#include "FreeList.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -13,17 +14,10 @@ typedef struct HeapPage {
 	uint8_t *body;
 } HeapPage;
 
-typedef struct FreeSpace {
-	struct FreeSpace *next;
-	uintptr_t size:56;
-	uint8_t tags;
-} FreeSpace;
-
 typedef struct {
 	HeapPage *pages;
 	HeapPage *pagesTail;
-	FreeSpace *spaces;
-	FreeSpace *spacesTail;
+	FreeList freeList;
 } PageSpace;
 
 typedef struct {
@@ -36,11 +30,7 @@ void freePageSpace(PageSpace *pageSpace);
 HeapPage *mapHeapPage(size_t size, _Bool executable);
 void unmapHeapPage(HeapPage *page);
 _Bool heapPageIncludes(HeapPage *page, uint8_t *addr);
-FreeSpace *createFreeSpace(uint8_t *p, size_t size);
-FreeSpace *createInitialFreeSpace(HeapPage *page);
-void extendFreeSpace(FreeSpace *space, size_t size);
 uint8_t *pageSpaceTryAllocate(PageSpace *pageSpace, size_t size);
-void pageSpaceFree(PageSpace *pageSpace, uint8_t *p, size_t size);
 HeapPage *pageSpaceFindPage(PageSpace *PageSpace, uint8_t *addr);
 _Bool pageSpaceIncludes(PageSpace *PageSpace, uint8_t *addr);
 void pageSpaceIteratorInit(PageSpaceIterator *iterator, PageSpace *space);

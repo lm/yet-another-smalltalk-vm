@@ -232,10 +232,10 @@ void gcSweep(PageSpace *space)
 				finalize[finalizeSize++] = object;
 				object->tags = (object->tags ^ TAG_MARKED) | TAG_FINALIZED;
 				prev = object;
-			} else if (prev != NULL && prev->tags & TAG_FREESPACE && heapPageIncludes(iterator.page, (uint8_t *) prev)) {
+			/*} else if (prev != NULL && prev->tags & TAG_FREESPACE && heapPageIncludes(iterator.page, (uint8_t *) prev)) {
 				extendFreeSpace((FreeSpace *) prev, align(computeRawObjectSize(object), HEAP_OBJECT_ALIGN));
 				LastGCStats.extended++;
-				LastGCStats.sweeped++;
+				LastGCStats.sweeped++;*/
 			} else {
 				freeObject(object);
 				prev = object;

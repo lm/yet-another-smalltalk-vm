@@ -5,8 +5,6 @@
 #include "HeapPage.h"
 #include "Scavenger.h"
 
-#define VERIFY_HEAP_AFTER_GC 0
-
 typedef struct {
 	Scavenger newSpace;
 	PageSpace oldSpace;

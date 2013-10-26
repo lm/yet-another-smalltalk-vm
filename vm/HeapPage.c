@@ -13,7 +13,7 @@ void initPageSpace(PageSpace *pageSpace, size_t size, _Bool executable)
 {
 	HeapPage *page = mapHeapPage(size, executable);
 	pageSpace->pages = pageSpace->pagesTail = page;
-	pageSpace->spaces = pageSpace->spacesTail = createInitialFreeSpace(page);
+	initFreeList(&pageSpace->freeList, page);
 }
 
 
@@ -66,83 +66,12 @@ _Bool heapPageIncludes(HeapPage *page, uint8_t *addr)
 }
 
 
-FreeSpace *createFreeSpace(uint8_t *p, size_t size)
-{
-	ASSERT((uintptr_t) p % HEAP_OBJECT_ALIGN == 0);
-	ASSERT((uintptr_t) size % HEAP_OBJECT_ALIGN == 0);
-	FreeSpace *space = (FreeSpace *) p;
-	// TODO: zeroing class here can broke interpreting of next objects in GC sweep
-	// memset(p, 0, size);
-	space->next = NULL;
-	space->size = size;
-	space->tags = TAG_FREESPACE;
-	return space;
-}
-
-
-FreeSpace *createInitialFreeSpace(HeapPage *page)
-{
-	uint8_t *start = (uint8_t *) align((uintptr_t) page->body, HEAP_OBJECT_ALIGN);
-	return createFreeSpace(start, align(page->bodySize - HEAP_OBJECT_ALIGN / 2, HEAP_OBJECT_ALIGN));
-}
-
-
-void extendFreeSpace(FreeSpace *space, size_t size)
-{
-	//HeapPage *page1 = pageSpaceFindPage(&_Heap.space, (uint8_t *) space);
-	//ASSERT(((uint8_t *) space + space->size + size) <= ((uint8_t *) page1 + page1->size));
-	// TODO: zeroing class here can broke interpreting of next objects in GC sweep
-	// memset((uint8_t *) space + space->size, 0, size);
-	space->size += size;
-}
-
-
 uint8_t *pageSpaceTryAllocate(PageSpace *pageSpace, size_t size)
 {
 	ASSERT(size % HEAP_OBJECT_ALIGN == 0);
-
-	FreeSpace *freeSpace = pageSpace->spaces;
-	FreeSpace *prev = NULL;
-
-	while (freeSpace != NULL) {
-		if (freeSpace->size >= size) {
-			ASSERT(freeSpace->size % HEAP_OBJECT_ALIGN == 0);
-			freeSpace->size -= size;
-			ASSERT(freeSpace->size % HEAP_OBJECT_ALIGN == 0);
-			if (freeSpace->size < HEAP_OBJECT_ALIGN) {
-				if (prev == NULL) {
-					pageSpace->spaces = freeSpace->next;
-				} else {
-					prev->next = freeSpace->next;
-				}
-				if (freeSpace->next == NULL) {
-					pageSpace->spacesTail = prev;
-				}
-			}
-			uint8_t *p = (uint8_t *) freeSpace + freeSpace->size;
-			//HeapPage *page = pageSpaceFindPage(pageSpace, p);
-			//ASSERT(p + size <= (uint8_t *) page + page->size);
-			ASSERT(((intptr_t) p & SPACE_TAG) == OLD_SPACE_TAG);
-			ASSERT((intptr_t) freeSpace->size % HEAP_OBJECT_ALIGN == 0);
-			return p;
-		}
-		prev = freeSpace;
-		freeSpace = freeSpace->next;
-	}
-
-	return NULL;
-}
-
-
-void pageSpaceFree(PageSpace *pageSpace, uint8_t *p, size_t size)
-{
-	FreeSpace *space = createFreeSpace(p, size);
-	if (pageSpace->spaces == NULL) {
-		pageSpace->spaces = space;
-	} else {
-		pageSpace->spaces->next = space;
-	}
-	pageSpace->spacesTail = space;
+	uint8_t *p = freeListTryAllocate(&pageSpace->freeList, size);
+	ASSERT(p == NULL || pageSpaceIncludes(pageSpace, p));
+	return p;
 }
 
 

@@ -4,12 +4,14 @@
 #include "Assert.h"
 #include "Os.h"
 #include "CompiledCode.h"
+#include "String.h"
 #include <string.h>
 
 #define KB 1024
 #define MB (1024 * 1024)
 
 #define SCAVENGE_EVERY_ALLOC 0
+#define VERIFY_HEAP_AFTER_GC 0
 
 Heap _Heap = { .rememberedSet = { 0 } };
 
@@ -90,7 +92,8 @@ static void nilVars(Value *vars, size_t count)
 
 void freeObject(RawObject *object)
 {
-	pageSpaceFree(&_Heap.oldSpace, (uint8_t *) object, align(computeRawObjectSize(object), HEAP_OBJECT_ALIGN));
+	FreeSpace *freeSpace = createFreeSpace((uint8_t *) object, align(computeRawObjectSize(object), HEAP_OBJECT_ALIGN));
+	freeListAddFreeSpace(&_Heap.oldSpace.freeList, freeSpace);
 }
 
 
@@ -109,22 +112,13 @@ static uint8_t *pageSpaceAllocate(PageSpace *pageSpace, size_t size)
 {
 	uint8_t *p = pageSpaceTryAllocate(pageSpace, size);
 	if (p == NULL) {
-		HeapPage *page = mapHeapPage(256 * 1024, pageSpace->pagesTail->isExecutable);
-		FreeSpace *freeSpace = createInitialFreeSpace(page);
-		ASSERT(freeSpace->size >= size);
-
+		HeapPage *page = mapHeapPage(256 * KB, pageSpace->pagesTail->isExecutable);
 		pageSpace->pagesTail->next = page;
 		pageSpace->pagesTail = page;
-		if (pageSpace->spaces == NULL) {
-			pageSpace->spaces = freeSpace;
-		} else {
-			pageSpace->spaces->next = freeSpace;
-		}
-		pageSpace->spacesTail = freeSpace;
-
-		freeSpace->size -= size;
-		ASSERT(((intptr_t) p & SPACE_TAG) == OLD_SPACE_TAG);
-		p = (uint8_t *) freeSpace + freeSpace->size;
+		expandFreeList(&pageSpace->freeList, page);
+		p = pageSpaceTryAllocate(pageSpace, size);
+		ASSERT(p != NULL);
+		return p;
 	}
 	return p;
 }
@@ -271,12 +265,12 @@ static void printFreeSpace(FreeSpace *freeSpace)
 
 static void printPageSpace(PageSpace *space)
 {
-	for (HeapPage *page = space->pages; page != NULL; page = page->next) {
+	/*for (HeapPage *page = space->pages; page != NULL; page = page->next) {
 		printf("\t");
 		printHeapPage(page);
 	}
 	for (FreeSpace *freeSpace = space->spaces; freeSpace != NULL; freeSpace = freeSpace->next) {
 		printf("\t");
 		printFreeSpace(freeSpace);
-	}
+	}*/
 }
