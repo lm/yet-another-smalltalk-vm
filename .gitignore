@@ -1,0 +1,14 @@
+*.o
+*.a
+*.out
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+Testing
+install_manifest.txt
+.gdb_history
+history.txt
+snapshot
+st

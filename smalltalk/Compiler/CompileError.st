@@ -1,0 +1,5 @@
+Error subclass: CompileError [
+
+	| identifier |
+
+]

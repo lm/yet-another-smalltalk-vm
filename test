@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo "--- Bootstrap"
+./st -b smalltalk -e "#Ok"
+echo "--- Array test"
+./st -f tests/ArrayTest.st
+echo "--- Behavior test"
+./st -f tests/BehaviorTest.st
+echo "--- Block test"
+./st -f tests/BlockTest.st
+echo "--- Character test"
+./st -f tests/CharacterTest.st
+echo "--- CollectionStream test"
+./st -f tests/CollectionStreamTest.st
+echo "--- Compiler test"
+./st -f tests/CompilerTest.st
+echo "--- Exception test"
+./st -f tests/ExceptionTest.st
+echo "--- Number test"
+./st -f tests/NumberTest.st
+echo "--- Object test"
+./st -f tests/ObjectTest.st
+echo "--- OrderedCollection test"
+./st -f tests/OrderedCollectionTest.st
+echo "--- OuterReturn test"
+./st -f tests/OuterReturnTest.st
+echo "--- Parser test"
+./st -f tests/ParserTest.st
+echo "--- RegAlloc test"
+./st -f tests/RegAllocTest.st
+echo "--- SmallInteger test"
+./st -f tests/SmallIntegerTest.st
+echo "--- StreamView test"
+./st -f tests/StreamViewTest.st
+echo "--- String test"
+./st -f tests/StringTest.st
+echo "--- UndefinedObject test"
+./st -f tests/UndefinedObjectTest.st
