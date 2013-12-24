@@ -24,7 +24,7 @@ ExternalStream subclass: FileStream [
 
 	class open: aString mode: anInteger [
 		<primitive: StreamOpenPrimitive>
-		IoError last signal.
+		IoError last appendName: aString; signal.
 	]
 
 
