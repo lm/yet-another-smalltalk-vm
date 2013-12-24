@@ -13,6 +13,11 @@ Object subclass: ExpressionNode [
 	]
 
 
+	disableReturn [
+		returns := false.
+	]
+
+
 	assigments [
 		^assigments
 	]
