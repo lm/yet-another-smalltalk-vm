@@ -43,11 +43,7 @@ HeapPage *mapHeapPage(size_t size, _Bool executable)
 	page->size = alignedSize;
 	page->bodySize = alignedSize - sizeof(*page);
 	page->body = (uint8_t *) page + sizeof(*page);
-	if (executable) {
-		memset(page->body, 0xCC, page->bodySize);
-	} else {
-		memset(page->body, 0, page->bodySize);
-	}
+	memset(page->body, executable ? 0xCC : 0, page->bodySize);
 	page->bodySize -= page->bodySize % HEAP_OBJECT_ALIGN;
 #if PRINT_PAGE_ALLOC
 	printf("Page %p %zi%s\n", page, size, executable ? " executable" : "");

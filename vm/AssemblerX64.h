@@ -1123,5 +1123,4 @@ static void asmEmitOperands(AssemblerBuffer *buffer, Operands *operands)
 	}
 }
 
-
 #endif

@@ -18,7 +18,6 @@ NativeCode *findNativeCodeAtIc(uint8_t *ic)
 		if ((obj->tags & TAG_FREESPACE) == 0 && obj->insts <= ic && ic < obj->insts + obj->size) {
 			return obj;
 		}
-		//printf("%p - %li\n", obj, obj->hash & TAG_MARKED);
 		obj = (NativeCode *) pageSpaceIteratorNext(&iterator);
 	}
 	return NULL;
