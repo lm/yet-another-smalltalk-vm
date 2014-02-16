@@ -284,13 +284,13 @@ void resetGcStats(void)
 void printGcStats(void)
 {
 	printf(
-		"GC total: %" SCNu64
-		" marked: %" SCNu64
-		" sweeped: %" SCNu64
-		" freed: %" SCNu64
-		" extended: %" SCNu64
-		" time: %" SCNu64
-		" count: %" SCNu64 "\n",
+		"GC total: %zu"
+		" marked: %zu"
+		" sweeped: %zu"
+		" freed: %zu"
+		" extended: %zu"
+		" time: %" PRIu64
+		" count: %zu\n",
 		LastGCStats.total,
 		LastGCStats.marked,
 		LastGCStats.sweeped,
