@@ -31,7 +31,10 @@ int main(int argc, char **args)
 	} else if (cliArgs.printHelp) {
 		printCliHelp();
 	} else if (cliArgs.fileName != NULL) {
-		/*result = */parseFileAndInitialize(cliArgs.fileName);
+		Value blockResult;
+		if (!parseFileAndInitialize(cliArgs.fileName, &blockResult)) {
+			result = EXIT_FAILURE;
+		}
 	} else if (cliArgs.eval != NULL) {
 		result = asCInt(evalCode(cliArgs.eval));
 	} else {

@@ -128,14 +128,16 @@ static void patchMethodNode(MethodNode *method)
 }
 
 
-void parseFileAndInitialize(char *filename)
+_Bool parseFileAndInitialize(char *filename)
 {
 	HandleScope scope;
 	openHandleScope(&scope);
 
 	OrderedCollection *classes = newOrdColl(8);
 	OrderedCollection *blocks = newOrdColl(8);
-	parseFile(filename, classes, blocks);
+	if (!parseFile(filename, classes, blocks)) {
+		return 0;
+	}
 
 	Iterator iterator;
 	initOrdCollIterator(&iterator, classes, 0, 0);
@@ -149,10 +151,11 @@ void parseFileAndInitialize(char *filename)
 	}
 
 	closeHandleScope(&scope, NULL);
+	return 1;
 }
 
 
-void parseFile(char *filename, OrderedCollection *classes, OrderedCollection *blocks)
+_Bool parseFile(char *filename, OrderedCollection *classes, OrderedCollection *blocks)
 {
 	HandleScope scope;
 	openHandleScope(&scope);
@@ -162,7 +165,7 @@ void parseFile(char *filename, OrderedCollection *classes, OrderedCollection *bl
 
 	if (file == NULL) {
 		printf("Cannot open file '%s' (errno: %i)\n", filename, errno);
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 	initFileParser(&parser, file, asString(filename));
 
@@ -171,20 +174,20 @@ void parseFile(char *filename, OrderedCollection *classes, OrderedCollection *bl
 			BlockNode *node = parseBlock(&parser);
 			if (node == NULL) {
 				printParseError(&parser, filename);
-				exit(EXIT_FAILURE);
+				return 0;
 			}
 			ordCollAddObject(blocks, (Object *) node);
 		} else {
 			ClassNode *node = parseClass(&parser);
 			if (node == NULL) {
 				printParseError(&parser, filename);
-				exit(EXIT_FAILURE);
+				return 0;
 			}
 
 			Object *class = buildClass(node);
 			if (isCompileError(class)) {
 				printCompileError((CompileError *) class);
-				exit(EXIT_FAILURE);
+				return 0;
 			}
 
 			if (classes != NULL) {
@@ -196,6 +199,7 @@ void parseFile(char *filename, OrderedCollection *classes, OrderedCollection *bl
 	freeParser(&parser);
 	fclose(file);
 	closeHandleScope(&scope, NULL);
+	return 1;
 }
 
 

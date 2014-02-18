@@ -21,8 +21,8 @@ Value invokeMethod(CompiledMethod *method, EntryArgs *args);
 Value invokeInititalize(Object *object);
 Value sendMessage(String *selector, EntryArgs *args);
 Value evalCode(char *source);
-void parseFileAndInitialize(char *filename);
-void parseFile(char *filename, OrderedCollection *classes, OrderedCollection *blocks);
+_Bool parseFileAndInitialize(char *filename);
+_Bool parseFile(char *filename, OrderedCollection *classes, OrderedCollection *blocks);
 
 
 static void entryArgsAddObject(EntryArgs *args, Object *object)
