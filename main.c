@@ -32,7 +32,9 @@ int main(int argc, char **args)
 		printCliHelp();
 	} else if (cliArgs.fileName != NULL) {
 		Value blockResult;
-		if (!parseFileAndInitialize(cliArgs.fileName, &blockResult)) {
+		if (parseFileAndInitialize(cliArgs.fileName, &blockResult)) {
+			result = valueTypeOf(blockResult, VALUE_INT) ? asCInt(blockResult) : result;
+		} else {
 			result = EXIT_FAILURE;
 		}
 	} else if (cliArgs.eval != NULL) {

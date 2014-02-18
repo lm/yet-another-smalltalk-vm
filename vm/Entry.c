@@ -128,7 +128,7 @@ static void patchMethodNode(MethodNode *method)
 }
 
 
-_Bool parseFileAndInitialize(char *filename)
+_Bool parseFileAndInitialize(char *filename, Value *lastBlockResult)
 {
 	HandleScope scope;
 	openHandleScope(&scope);
@@ -147,7 +147,7 @@ _Bool parseFileAndInitialize(char *filename)
 
 	initOrdCollIterator(&iterator, blocks, 0, 0);
 	while (iteratorHasNext(&iterator)) {
-		evalBlockNode((BlockNode *) iteratorNextObject(&iterator));
+		*lastBlockResult = evalBlockNode((BlockNode *) iteratorNextObject(&iterator));
 	}
 
 	closeHandleScope(&scope, NULL);
