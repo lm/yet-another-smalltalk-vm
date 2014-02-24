@@ -36,6 +36,12 @@ void initScavenger(Scavenger *scavenger, size_t size)
 }
 
 
+void freeScavenger(Scavenger *scavenger)
+{
+	unmapHeapPage(scavenger->page);
+}
+
+
 uint8_t *scavengerTryAllocate(Scavenger *scavenger, size_t size)
 {
 	ASSERT(size % HEAP_OBJECT_ALIGN == 0);

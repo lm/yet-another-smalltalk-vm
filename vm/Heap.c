@@ -34,7 +34,7 @@ void initHeap(void)
 
 void freeHeap(void)
 {
-	//freePageSpace(&_Heap.newSpace);
+	freeScavenger(&_Heap.newSpace);
 	freePageSpace(&_Heap.oldSpace);
 	freePageSpace(&_Heap.execSpace);
 }

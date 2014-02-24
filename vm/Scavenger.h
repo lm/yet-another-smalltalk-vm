@@ -15,6 +15,7 @@ typedef struct {
 } Scavenger;
 
 void initScavenger(Scavenger *scavenger, size_t size);
+void freeScavenger(Scavenger *scavenger);
 uint8_t *scavengerTryAllocate(Scavenger *scavenger, size_t size);
 void scavengerScavenge(Scavenger *scavenger);
 _Bool scavengerIncludes(Scavenger *scavenger, uint8_t *addr);
