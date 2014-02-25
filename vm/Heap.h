@@ -4,15 +4,13 @@
 #include "Object.h"
 #include "HeapPage.h"
 #include "Scavenger.h"
+#include "RememberedSet.h"
 
 typedef struct {
 	Scavenger newSpace;
 	PageSpace oldSpace;
 	PageSpace execSpace;
-	struct {
-		Value objects[8192 * 16];
-		Value *end;
-	} rememberedSet;
+	RememberedSet rememberedSet;
 } Heap;
 
 struct NativeCode;
@@ -32,19 +30,10 @@ void verifyHeap(void);
 void printHeap(void);
 
 
-static inline void rememberedSetAdd(RawObject *object)
-{
-	ASSERT(_Heap.rememberedSet.end < (_Heap.rememberedSet.objects + 8192 * 16));
-	ASSERT((object->tags & TAG_REMEMBERED) == 0);
-	object->tags |= TAG_REMEMBERED;
-	*_Heap.rememberedSet.end++ = tagPtr(object);
-}
-
-
 static inline void rawObjectStorePtr(RawObject *object, Value *field, RawObject *value)
 {
 	if (isOldObject(object) && isNewObject(value) && (object->tags & TAG_REMEMBERED) == 0) {
-		rememberedSetAdd(object);
+		rememberedSetAdd(&_Heap.rememberedSet, object);
 	}
 	*field = tagPtr(value);
 }

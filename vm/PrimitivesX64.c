@@ -120,7 +120,7 @@ static void generateInstVarAtPutPrimitive(CodeGenerator *generator)
 	asmAddbMem(buffer, asmMem(RCX, NO_REGISTER, SS_1, isIndexedOffset), SIL);
 	asmAddbMem(buffer, asmMem(RCX, NO_REGISTER, SS_1, payloadSizeOffset), SIL);
 	asmMovqToMem(buffer, RAX, asmMem(RDI, RSI, SS_8, HEADER_SIZE - 1));
-	generateStoreCheck(buffer, RDI, RAX);
+	generateStoreCheck(generator, RDI, RAX);
 	asmRet(buffer);
 
 	asmLabelBind(buffer, &outOfBounds, asmOffset(buffer));
@@ -246,7 +246,7 @@ static void generateAtPutPrimitive(CodeGenerator *generator)
 
 	// set the value
 	asmMovqToMem(buffer, RDX, asmMem(RDI, RSI, SS_8, HEADER_SIZE + sizeof(Value) - 1));
-	generateStoreCheck(buffer, RDI, RDX);
+	generateStoreCheck(generator, RDI, RDX);
 	asmRet(buffer);
 
 	// bytes

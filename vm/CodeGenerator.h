@@ -24,7 +24,7 @@ typedef struct {
 NativeCode *generateMethodCode(CompiledMethod *method);
 void generateLoadObject(AssemblerBuffer *buffer, RawObject *object, Register dst, _Bool tag);
 void generateLoadClass(AssemblerBuffer *buffer, Register src, Register dst);
-void generateStoreCheck(AssemblerBuffer *buffer, Register object, Register value);
+void generateStoreCheck(CodeGenerator *generator, Register object, Register value);
 void generateMethodLookup(CodeGenerator *generator);
 void generateStackmap(CodeGenerator *generator);
 void generateCCall(CodeGenerator *generator, intptr_t cFunction, size_t argsSize, _Bool storeIp);

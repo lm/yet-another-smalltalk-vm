@@ -360,19 +360,22 @@ static void generateSend(CodeGenerator *generator, BytecodesIterator *iterator)
 }
 
 
-void generateStoreCheck(AssemblerBuffer *buffer, Register object, Register value)
+void generateStoreCheck(CodeGenerator *generator, Register object, Register value)
 {
 	ASSERT(object != TMP && value != TMP);
 	MemoryOperand tags = asmMem(object, NO_REGISTER, SS_1, varOffset(RawObject, tags));
+	AssemblerBuffer *buffer = &generator->buffer;
 	AssemblerLabel newObject;
 	AssemblerLabel alreadyInSet;
 	AssemblerLabel valueIsNotPtr;
 	AssemblerLabel valueIsOld;
+	AssemblerLabel dontGrow;
 
 	asmInitLabel(&newObject);
 	asmInitLabel(&alreadyInSet);
 	asmInitLabel(&valueIsNotPtr);
 	asmInitLabel(&valueIsOld);
+	asmInitLabel(&dontGrow);
 
 	// test if object is new object
 	asmTestqImm(buffer, object, NEW_SPACE_TAG);
@@ -382,23 +385,56 @@ void generateStoreCheck(AssemblerBuffer *buffer, Register object, Register value
 	asmTestqImm(buffer, value, VALUE_POINTER);
 	asmJ(buffer, COND_ZERO, &valueIsNotPtr);
 
-	// tests if value is old object
+	// test if value is old object
 	asmTestqImm(buffer, value, NEW_SPACE_TAG);
 	asmJ(buffer, COND_ZERO, &valueIsOld);
 
-	// load object tags
+	// test if object is already remembered
 	asmTestbMemImm(buffer, tags, TAG_REMEMBERED);
 	asmJ(buffer, COND_NOT_ZERO, &alreadyInSet);
 
 	// mark as remembered
 	asmOrbMemImm(buffer, tags, TAG_REMEMBERED);
 
-	// store object in remembered set
-	asmMovqImm(buffer, (int64_t) &_Heap.rememberedSet.end, TMP);
-	asmAddqMemImm(buffer, asmMem(TMP, NO_REGISTER, SS_1, 0), sizeof(intptr_t));
+	// load current block
+	asmMovqImm(buffer, (int64_t) &_Heap.rememberedSet.blocks, TMP);
 	asmMovqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, 0), TMP);
+
+	// store object in remembered set
+	asmAddqMemImm(buffer, asmMem(TMP, NO_REGISTER, SS_1, offsetof(RememberedSetBlock, current)), sizeof(intptr_t));
+	asmMovqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, offsetof(RememberedSetBlock, current)), TMP);
 	asmMovqToMem(buffer, object, asmMem(TMP, NO_REGISTER, SS_1, -sizeof(intptr_t)));
 
+	// test if remembered set block is full
+	asmPushq(buffer, object);
+	asmMovqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, offsetof(RememberedSetBlock, end)), object);
+	asmCmpqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, offsetof(RememberedSetBlock, current)), object);
+	asmPopq(buffer, object);
+	asmJ(buffer, COND_EQUAL, &dontGrow);
+
+	// grow remembered set
+	asmPushq(buffer, RAX);
+	asmPushq(buffer, RCX);
+	asmPushq(buffer, RDX);
+	asmPushq(buffer, RSI);
+	asmPushq(buffer, RDI);
+	asmPushq(buffer, R8);
+	asmPushq(buffer, R9);
+	asmPushq(buffer, R10);
+	asmPushq(buffer, R11);
+	asmMovqImm(buffer, (int64_t) &_Heap.rememberedSet, RDI);
+	generateCCall(generator, (intptr_t) rememberedSetGrow, 1, 0);
+	asmPopq(buffer, R11);
+	asmPopq(buffer, R10);
+	asmPopq(buffer, R9);
+	asmPopq(buffer, R8);
+	asmPopq(buffer, RDI);
+	asmPopq(buffer, RSI);
+	asmPopq(buffer, RDX);
+	asmPopq(buffer, RCX);
+	asmPopq(buffer, RAX);
+
+	asmLabelBind(buffer, &dontGrow, asmOffset(buffer));
 	asmLabelBind(buffer, &newObject, asmOffset(buffer));
 	asmLabelBind(buffer, &alreadyInSet, asmOffset(buffer));
 	asmLabelBind(buffer, &valueIsNotPtr, asmOffset(buffer));
@@ -735,7 +771,7 @@ static void movToOperand(CodeGenerator *generator, Register reg, Operand operand
 		Variable *context = specialVariableAt(generator, VAR_CONTEXT, operand.level);
 		ptrdiff_t offset = varOffset(RawContext, vars) + operand.index * sizeof(Value);
 		fillContext(generator, operand.level);
-		generateStoreCheck(buffer, context->reg, reg);
+		generateStoreCheck(generator, context->reg, reg);
 		asmMovqToMem(buffer, reg, asmMem(context->reg, NO_REGISTER, SS_1, offset));
 		break;
 	}
@@ -746,7 +782,7 @@ static void movToOperand(CodeGenerator *generator, Register reg, Operand operand
 		ptrdiff_t offset = varOffset(RawObject, body) + (shape.payloadSize + operand.index + shape.isIndexed) * sizeof(Value);
 
 		fillVar(generator, self);
-		generateStoreCheck(buffer, self->reg, reg);
+		generateStoreCheck(generator, self->reg, reg);
 		asmMovqToMem(buffer, reg, asmMem(self->reg, NO_REGISTER, SS_1, offset));
 		break;
 	}
@@ -755,7 +791,7 @@ static void movToOperand(CodeGenerator *generator, Register reg, Operand operand
 		Variable *variable = specialVariableAt(generator, VAR_ASSOC, operand.index);
 		fillAssoc(generator, operand.index);
 		asmMovqToMem(buffer, reg, asmMem(variable->reg, NO_REGISTER, SS_1, varOffset(RawAssociation, value)));
-		generateStoreCheck(buffer, variable->reg, reg);
+		generateStoreCheck(generator, variable->reg, reg);
 		break;
 	}
 
@@ -1140,7 +1176,7 @@ void generateMethodContextAllocation(CodeGenerator *generator, size_t size)
 	asmMovqToMem(buffer, RBP, asmMem(RAX, NO_REGISTER, SS_1, varOffset(RawContext, frame)));
 	// setup parent context
 	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, frameOffset), reg);
-	generateStoreCheck(buffer, RAX, reg);
+	generateStoreCheck(generator, RAX, reg);
 	asmMovqToMem(buffer, reg, asmMem(RAX, NO_REGISTER, SS_1, varOffset(RawContext, parent)));
 	// load thread
 	asmMovqMem(buffer, asmMem(reg, NO_REGISTER, SS_1, varOffset(RawContext, thread)), reg);
@@ -1153,7 +1189,7 @@ void generateMethodContextAllocation(CodeGenerator *generator, size_t size)
 	// tag compiled code
 	asmIncq(buffer, reg);
 	// setup compiled code within new context
-	generateStoreCheck(buffer, RAX, reg);
+	generateStoreCheck(generator, RAX, reg);
 	asmMovqToMem(buffer, reg, asmMem(RAX, NO_REGISTER, SS_1, varOffset(RawContext, code)));
 	// move context to designated context register
 	asmMovq(buffer, RAX, reg);

@@ -172,7 +172,7 @@ static void iterateObject(MarkingQueue *queue, RawObject *root)
 
 	root->tags = root->tags & ~TAG_REMEMBERED;
 	if (remember && isOldObject(root)) {
-		rememberedSetAdd(root);
+		rememberedSetAdd(&_Heap.rememberedSet, root);
 	}
 }
 

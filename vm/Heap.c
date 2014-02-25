@@ -30,7 +30,7 @@ void initHeap(void)
 	initScavenger(&_Heap.newSpace, 32 * MB);
 	initPageSpace(&_Heap.oldSpace, 256 * KB, 0);
 	initPageSpace(&_Heap.execSpace, 256 * KB, 1);
-	_Heap.rememberedSet.end = _Heap.rememberedSet.objects;
+	initRememberedSet(&_Heap.rememberedSet);
 }
 
 
@@ -166,7 +166,7 @@ void markAndSweep(void)
 	LastGCStats.count++;
 	int64_t startTime = osCurrentMicroTime();
 
-	emptyRememberedSet();
+	rememberedSetReset(&_Heap.rememberedSet);
 	gcMarkRoots();
 	gcSweep(&_Heap.oldSpace);
 
@@ -176,12 +176,6 @@ void markAndSweep(void)
 #if VERIFY_HEAP_AFTER_GC
 	verifyHeap();
 #endif
-}
-
-
-static void emptyRememberedSet(void)
-{
-	_Heap.rememberedSet.end = _Heap.rememberedSet.objects;
 }
 
 

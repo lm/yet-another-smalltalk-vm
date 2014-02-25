@@ -177,13 +177,10 @@ static void iterateHandles(Scavenger *scavenger)
 
 static void iterateRememberedSet(Scavenger *scavenger)
 {
-	Value *p = _Heap.rememberedSet.objects;
-	Value *end = _Heap.rememberedSet.end;
-	ASSERT(end < (_Heap.rememberedSet.objects + 8192 * 16));
-
-	while (p < end) {
-		iterateObject(scavenger, asObject(*p));
-		p++;
+	RememberedSetIterator iterator;
+	initRememberedSetIterator(&iterator, &_Heap.rememberedSet);
+	while (rememberedSetIteratorHasNext(&iterator)) {
+		iterateObject(scavenger, rememberedSetIteratorNext(&iterator));
 	}
 }
 
@@ -312,6 +309,6 @@ static void iterateObject(Scavenger *scavenger, RawObject *root)
 	}
 
 	if (remember && isOldObject(root) && (root->tags & TAG_REMEMBERED) == 0) {
-		rememberedSetAdd(root);
+		rememberedSetAdd(&_Heap.rememberedSet, root);
 	}
 }
