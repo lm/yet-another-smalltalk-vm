@@ -26,7 +26,7 @@ static void parseCliArgs(CliArgs *cliArgs, int argc, char **args)
 
 	int arg;
 	opterr = 0;
-	while ((arg = getopt(argc, args, "b:s:f:e:")) != -1) {
+	while ((arg = getopt(argc, args, "hb:s:f:e:")) != -1) {
 		switch (arg) {
 		case 'e':
 			cliArgs->eval = optarg;
