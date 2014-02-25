@@ -76,7 +76,7 @@ static void printCliHelp(void)
 		"\t-f compile classes and evaluate code within specified file\n"
 		"\t-s path to snapshot file\n"
 		"\t-b bootstrap from kernel directory\n"
-		"\t-h prints this help"
+		"\t-h prints this help\n"
 	);
 }
 
