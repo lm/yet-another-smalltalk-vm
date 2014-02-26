@@ -1,11 +1,9 @@
 #include "vm/Heap.h"
-#include "vm/Handle.h"
 #include "vm/Bootstrap.h"
 #include "vm/Snapshot.h"
 #include "vm/Entry.h"
 #include "vm/Repl.h"
 #include "vm/Thread.h"
-#include "vm/CompiledCode.h"
 #include "vm/Cli.h"
 #include <unistd.h>
 #include <string.h>
