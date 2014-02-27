@@ -22,7 +22,7 @@
 	uint8_t tags
 
 enum {
-	SPACE_TAG = 8,
+	SPACE_TAG = 1 << 3,
 	NEW_SPACE_TAG = SPACE_TAG,
 	OLD_SPACE_TAG = 0,
 	HEAP_OBJECT_ALIGN = 16,
