@@ -885,8 +885,8 @@ static void generateBlockValueArgsPrimitive(CodeGenerator *generator)
 	asmTestq(buffer, RBX, RBX);
 	asmJ(buffer, COND_ZERO, &zeroArgs);
 	asmLabelBind(buffer, &loop, asmOffset(buffer));
-	asmPushqMem(buffer, asmMem(RSI, RBX, SS_8, varOffset(RawArray, vars)));
 	asmDecq(buffer, RBX);
+	asmPushqMem(buffer, asmMem(RSI, RBX, SS_8, varOffset(RawArray, vars)));
 	asmJ(buffer, COND_NOT_ZERO, &loop);
 	asmLabelBind(buffer, &zeroArgs, asmOffset(buffer));
 
