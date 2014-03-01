@@ -44,8 +44,7 @@ Object subclass: Compiler [
 		| node method |
 
 		node := (Parser parseString: 'eval [', aString, ']') parseMethod.
-		node body expressions isEmpty ifFalse: [
-			node body expressions last enableReturn].
+		node body expressions isEmpty ifFalse: [node body expressions last enableReturn].
 		method := self compileMethod: node in: UndefinedObject.
 		^method sendTo: nil
 	]

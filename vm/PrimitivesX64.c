@@ -969,8 +969,6 @@ static void generateBlockValueArgsPrimitive(CodeGenerator *generator)
 	asmRet(buffer);
 
 	asmLabelBind(buffer, &invalidArgs, asmOffset(buffer));
-
-	// epilogue
 	asmMovq(buffer, RBP, RSP);
 	asmPopq(buffer, RBP);
 }
