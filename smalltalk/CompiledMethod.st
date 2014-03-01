@@ -35,6 +35,12 @@ CompiledCode subclass: CompiledMethod [
 	]
 
 
+	sendTo: anObject withArguments: anArray [
+		<primitive: MethodSendArgsPrimitive>
+		Error signal.
+	]
+
+
 	"printing"
 
 	printOn: aStream [

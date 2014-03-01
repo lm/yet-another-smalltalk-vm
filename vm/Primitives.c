@@ -158,6 +158,7 @@ Primitive Primitives[] = {
 	{"BuildClassPrimitive", CCALL, .cFunction = buildClassPrimitive, 2},
 	{"CompileMethodPrimitive", CCALL, .cFunction = compileMethodPrimitive, 3},
 	{"MethodSendPrimitive", GEN, generateMethodSendPrimitive},
+	{"MethodSendArgsPrimitive", GEN, generateMethodSendArgsPrimitive},
 };
 
 

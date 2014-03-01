@@ -500,6 +500,69 @@ static void generateMethodSendPrimitive(CodeGenerator *generator)
 }
 
 
+static void generateMethodSendArgsPrimitive(CodeGenerator *generator)
+{
+	AssemblerBuffer *buffer = &generator->buffer;
+	AssemblerLabel invalidArgs;
+	AssemblerLabel loop;
+	AssemblerLabel zeroArgs;
+	ptrdiff_t argsOffset = offsetof(RawCompiledMethod, header) + offsetof(CompiledCodeHeader, argsSize) - 1;
+
+	asmInitLabel(&invalidArgs);
+	asmInitLabel(&loop);
+	asmInitLabel(&zeroArgs);
+
+	// prologue
+	asmPushq(buffer, RBP);
+	asmMovq(buffer, RSP, RBP);
+
+	// save native code
+	asmPushq(buffer, R11);
+	generatePushDummyContext(buffer);
+
+	// get native code for given method
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RSI);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 3 * sizeof(intptr_t)), RDI);
+	generateCCall(generator, (intptr_t) scopedGetNativeCode, 2, 1);
+
+	// load arguments array
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 4 * sizeof(intptr_t)), RDI);
+	// load arguments array size
+	asmMovqMem(buffer, asmMem(RDI, NO_REGISTER, SS_1, varOffset(RawArray, size)), RBX);
+	// load compiled method
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), TMP);
+	// check arguments size
+	asmCmpbMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, argsOffset), BL);
+	asmJ(buffer, COND_NOT_EQUAL, &invalidArgs);
+
+	// push arguments on stack
+	asmTestq(buffer, RBX, RBX);
+	asmJ(buffer, COND_ZERO, &zeroArgs);
+	asmLabelBind(buffer, &loop, asmOffset(buffer));
+	asmDecq(buffer, RBX);
+	asmPushqMem(buffer, asmMem(RDI, RBX, SS_8, varOffset(RawArray, vars)));
+	asmJ(buffer, COND_NOT_ZERO, &loop);
+	asmLabelBind(buffer, &zeroArgs, asmOffset(buffer));
+
+	// push receiver
+	asmPushqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 3 * sizeof(intptr_t)));
+
+	// invoke method
+	asmMovq(buffer, RAX, R11);
+	asmCallq(buffer, R11);
+	generateStackmap(generator);
+
+	// epilogue
+	asmMovq(buffer, RBP, RSP);
+	asmPopq(buffer, RBP);
+	asmRet(buffer);
+
+	asmLabelBind(buffer, &invalidArgs, asmOffset(buffer));
+	asmMovq(buffer, RBP, RSP);
+	asmPopq(buffer, RBP);
+}
+
+
 /*static void generateSmallIntCheck(buffer)
 {
 	asmMovq(buffer, RDI, TMP);
