@@ -2,6 +2,7 @@
 #define HANDLE_H
 
 #include "Object.h"
+#include "Thread.h"
 #include "Dictionary.h"
 #include <string.h>
 
@@ -94,25 +95,25 @@ typedef struct {
 	String *generateBacktraceSymbol;
 } SmalltalkHandles;
 
-extern Handle *HeapHandles;
 extern SmalltalkHandles Handles;
-extern HandleScope *ScopeTail;
 
-static void *closeHandleScope(HandleScope *scope, void *handle);
 static void *scopeHandle(void *object);
+static void *closeHandleScope(HandleScope *scope, void *handle);
+
 static void *persistHandle(void *handle);
 static void *handle(void *object);
 void freeHandle(void *handle);
 void freeHandles(void);
-Object *newObject(Class *class, size_t size);
+
+void *newObject(Class *class, size_t size);
 static Value getTaggedPtr(void *handle);
 Object *copyResizedObject(Object *object, size_t newSize);
 
-void initHandlesIterator(HandlesIterator *iterator);
+void initHandlesIterator(HandlesIterator *iterator, Handle *handles);
 _Bool handlesIteratorHasNext(HandlesIterator *iterator);
 Object *handlesIteratorNext(HandlesIterator *iterator);
 
-void initHandleScopeIterator(HandleScopeIterator *iterator);
+void initHandleScopeIterator(HandleScopeIterator *iterator, HandleScope *scopes);
 _Bool handleScopeIteratorHasNext(HandleScopeIterator *iterator);
 HandleScope *handleScopeIteratorNext(HandleScopeIterator *iterator);
 
@@ -122,27 +123,27 @@ HandleScope *handleScopeIteratorNext(HandleScopeIterator *iterator);
 	static void _openHandleScope(HandleScope *scope, char *file, size_t line)
 	{
 		memset(scope, 0, sizeof(*scope));
-		scope->parent = ScopeTail;
+		scope->parent = CurrentThread.handleScopes;
 		scope->file = file;
 		scope->line = line;
-		ScopeTail = scope;
+		CurrentThread.handleScopes = scope;
 	}
 #else
 	static void openHandleScope(HandleScope *scope)
 	{
 		memset(scope, 0, sizeof(*scope));
-		scope->parent = ScopeTail;
-		ScopeTail = scope;
+		scope->parent = CurrentThread.handleScopes;
+		CurrentThread.handleScopes = scope;
 	}
 #endif
 
 
 static void *closeHandleScope(HandleScope *scope, void *handle)
 {
-	ASSERT(ScopeTail == scope);
-	ScopeTail = ScopeTail->parent;
+	ASSERT(CurrentThread.handleScopes == scope);
+	CurrentThread.handleScopes = CurrentThread.handleScopes->parent;
 	if (handle != NULL) {
-		ASSERT(ScopeTail != NULL);
+		ASSERT(CurrentThread.handleScopes != NULL);
 		return scopeHandle(((Object *) handle)->raw);
 	}
 	return NULL;
@@ -151,9 +152,9 @@ static void *closeHandleScope(HandleScope *scope, void *handle)
 
 static void *scopeHandle(void *object)
 {
-	ASSERT(ScopeTail != NULL);
-	ASSERT(ScopeTail->size < 256);
-	Object *handle = &ScopeTail->handles[ScopeTail->size++];
+	ASSERT(CurrentThread.handleScopes != NULL);
+	ASSERT(CurrentThread.handleScopes->size < 256);
+	Object *handle = &CurrentThread.handleScopes->handles[CurrentThread.handleScopes->size++];
 	handle->raw = object;
 	return handle;
 }
@@ -171,8 +172,8 @@ static void *handle(void *object)
 	ASSERT(handle != NULL);
 	handle->object = object;
 	handle->prev = NULL;
-	handle->next = HeapHandles;
-	HeapHandles = handle;
+	handle->next = CurrentThread.handles;
+	CurrentThread.handles = handle;
 	return (void *) handle;
 }
 

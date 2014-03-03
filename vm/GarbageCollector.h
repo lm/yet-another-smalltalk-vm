@@ -2,6 +2,7 @@
 #define GARBAGECOLLECTOR_H
 
 #include "Object.h"
+#include "Thread.h"
 #include "HeapPage.h"
 
 typedef struct {
@@ -17,7 +18,7 @@ typedef struct {
 
 extern GCStats LastGCStats;
 
-void gcMarkRoots(void);
+void gcMarkRoots(Thread *thread);
 void gcSweep(PageSpace *space);
 void resetGcStats(void);
 void printGcStats(void);

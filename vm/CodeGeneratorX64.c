@@ -377,6 +377,9 @@ void generateStoreCheck(CodeGenerator *generator, Register object, Register valu
 	asmInitLabel(&valueIsOld);
 	asmInitLabel(&dontGrow);
 
+	ptrdiff_t rememberedSetOffset = offsetof(Thread, heap) + offsetof(Heap, rememberedSet);
+	ptrdiff_t blocksOffset = rememberedSetOffset + offsetof(RememberedSet, blocks);
+
 	// test if object is new object
 	asmTestqImm(buffer, object, NEW_SPACE_TAG);
 	asmJ(buffer, COND_NOT_ZERO, &newObject);
@@ -396,9 +399,10 @@ void generateStoreCheck(CodeGenerator *generator, Register object, Register valu
 	// mark as remembered
 	asmOrbMemImm(buffer, tags, TAG_REMEMBERED);
 
+	// load thread
+	asmMovqMem(buffer, asmMem(CTX, NO_REGISTER, SS_1, varOffset(RawContext, thread)), TMP);
 	// load current block
-	asmMovqImm(buffer, (int64_t) &_Heap.rememberedSet.blocks, TMP);
-	asmMovqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, 0), TMP);
+	asmMovqMem(buffer, asmMem(TMP, NO_REGISTER, SS_1, blocksOffset), TMP);
 
 	// store object in remembered set
 	asmAddqMemImm(buffer, asmMem(TMP, NO_REGISTER, SS_1, offsetof(RememberedSetBlock, current)), sizeof(intptr_t));
@@ -422,7 +426,10 @@ void generateStoreCheck(CodeGenerator *generator, Register object, Register valu
 	asmPushq(buffer, R9);
 	asmPushq(buffer, R10);
 	asmPushq(buffer, R11);
-	asmMovqImm(buffer, (int64_t) &_Heap.rememberedSet, RDI);
+	// load thread
+	asmMovqMem(buffer, asmMem(CTX, NO_REGISTER, SS_1, varOffset(RawContext, thread)), TMP);
+	// load remembered set
+	asmLeaq(buffer, asmMem(TMP, NO_REGISTER, SS_1, rememberedSetOffset), RDI);
 	generateCCall(generator, (intptr_t) rememberedSetGrow, 1, 0);
 	asmPopq(buffer, R11);
 	asmPopq(buffer, R10);
@@ -955,8 +962,8 @@ static void generateLoadBlock(CodeGenerator *generator, Operand operand)
 	AssemblerBuffer *buffer = &generator->buffer;
 
 	// allocate a Block
-	generateLoadObject(buffer, (RawObject *) Handles.Block->raw, RDI, 0);
-	asmMovqImm(buffer, 0, RSI);
+	generateLoadObject(buffer, (RawObject *) Handles.Block->raw, RSI, 0);
+	asmMovqImm(buffer, 0, RDX);
 	generateStubCall(generator, &AllocateStub);
 	invalidateRegs(&generator->regsAlloc);
 
@@ -1093,7 +1100,7 @@ void generateStackmap(CodeGenerator *generator)
 	openHandleScope(&scope);
 
 	size_t size = (generator->frameSize + generator->frameRawAreaSize) / 8 + 1 + sizeof(Value);
-	Stackmap *stackmap = scopeHandle(allocateObject(Handles.ByteArray->raw, size));
+	Stackmap *stackmap = newObject(Handles.ByteArray, size);
 	stackmap->raw->ic = asmOffset(&generator->buffer);
 
 	size_t varsSize = generator->regsAlloc.varsSize;
@@ -1164,11 +1171,11 @@ void generateMethodContextAllocation(CodeGenerator *generator, size_t size)
 	asmMovqToMem(buffer, reg, asmMem(RBP, NO_REGISTER, SS_1, frameOffset));
 
 	// allocate new context
-	generateLoadObject(buffer, (RawObject *) Handles.MethodContext->raw, RDI, 0);
+	generateLoadObject(buffer, (RawObject *) Handles.MethodContext->raw, RSI, 0);
 	if (size == 0) {
-		asmXorq(buffer, RSI, RSI);
+		asmXorq(buffer, RDX, RDX);
 	} else {
-		asmMovqImm(buffer, size, RSI);
+		asmMovqImm(buffer, size, RDX);
 	}
 	generateStubCall(generator, &AllocateStub);
 
@@ -1204,8 +1211,8 @@ void generateBlockContextAllocation(CodeGenerator *generator)
 	ptrdiff_t ctxSizeOffset = offsetof(RawCompiledBlock, header) + offsetof(CompiledCodeHeader, contextSize) - 1;
 
 	// allocate context
-	generateLoadObject(buffer, (RawObject *) Handles.BlockContext->raw, RDI, 0);
-	asmMovzxbMemq(buffer, asmMem(TMP, NO_REGISTER, SS_1, ctxSizeOffset), RSI);
+	generateLoadObject(buffer, (RawObject *) Handles.BlockContext->raw, RSI, 0);
+	asmMovzxbMemq(buffer, asmMem(TMP, NO_REGISTER, SS_1, ctxSizeOffset), RDX);
 	generateStubCall(generator, &AllocateStub);
 	asmMovq(buffer, RAX, CTX);
 
@@ -1246,7 +1253,7 @@ NativeCode *generateDoesNotUnderstand(String *selector)
 	asmInitBuffer(&buffer, 64);
 
 	generateLoadObject(&buffer, (RawObject *) selector->raw, RDI, 1);
-	asmMovqImm(&buffer, argsSize, RSI);
+	asmMovqImm(&buffer, argsSize, RDX);
 
 	// jump to stub
 	asmMovqImm(&buffer, (uint64_t) getStubNativeCode(&DoesNotUnderstandStub)->insts, R11);
@@ -1276,7 +1283,7 @@ NativeCode *buildNativeCode(CodeGenerator *generator)
 NativeCode *buildNativeCodeFromAssembler(AssemblerBuffer *buffer)
 {
 	size_t size = asmOffset(buffer);
-	NativeCode *code = allocateNativeCode(size, buffer->pointersOffsetsSize);
+	NativeCode *code = allocateNativeCode(&CurrentThread.heap, size, buffer->pointersOffsetsSize);
 	code->compiledCode = NULL;
 	code->argsSize = 0;
 	code->descriptors = NULL;

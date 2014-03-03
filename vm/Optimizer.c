@@ -128,7 +128,7 @@ CompiledMethod *optimizeMethod(CompiledMethod *method)
 
 	printBytecodes(optimizer.buffer.buffer, asmOffset(&optimizer.buffer), ordCollAsArray(optimizer.literals)->raw);
 
-	CompiledMethod *newMethod = scopeHandle(allocateObject(Handles.CompiledMethod->raw, asmOffset(&optimizer.buffer)));
+	CompiledMethod *newMethod = newObject(Handles.CompiledMethod, asmOffset(&optimizer.buffer));
 	asmCopyBuffer(&optimizer.buffer, newMethod->raw->bytes, newMethod->raw->size);
 	compiledMethodSetHeader(newMethod, newHeader);
 	compiledMethodSetLiterals(newMethod, ordCollAsArray(optimizer.literals));

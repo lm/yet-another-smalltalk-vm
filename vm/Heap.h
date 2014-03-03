@@ -6,42 +6,27 @@
 #include "Scavenger.h"
 #include "RememberedSet.h"
 
-typedef struct {
+struct Thread;
+struct NativeCode;
+
+typedef struct Heap {
+	struct Thread *thread;
 	Scavenger newSpace;
 	PageSpace oldSpace;
 	PageSpace execSpace;
 	RememberedSet rememberedSet;
 } Heap;
 
-struct NativeCode;
-
-extern Heap _Heap;
-
-void initHeap(void);
-void freeHeap(void);
-RawObject *allocateObject(RawClass *class, size_t size);
-void freeObject(RawObject *object);
-struct NativeCode *allocateNativeCode(size_t size, size_t pointersOffsetsSize);
-uint8_t *allocate(size_t size);
-uint8_t *tryAllocateOld(size_t size, _Bool grow);
-void collectGarbage(void);
-void markAndSweep(void);
-void verifyHeap(void);
-void printHeap(void);
-
-
-static inline void rawObjectStorePtr(RawObject *object, Value *field, RawObject *value)
-{
-	if (isOldObject(object) && isNewObject(value) && (object->tags & TAG_REMEMBERED) == 0) {
-		rememberedSetAdd(&_Heap.rememberedSet, object);
-	}
-	*field = tagPtr(value);
-}
-
-
-static inline void objectStorePtr(Object *object, Value *field, Object *value)
-{
-	rawObjectStorePtr(object->raw, field, value->raw);
-}
+void initHeap(Heap *heap, struct Thread *thread);
+void freeHeap(Heap *heap);
+RawObject *allocateObject(Heap *heap, RawClass *class, size_t size);
+void freeObject(PageSpace *space, RawObject *object);
+struct NativeCode *allocateNativeCode(Heap *heap, size_t size, size_t pointersOffsetsSize);
+uint8_t *allocate(Heap *heap, size_t size);
+uint8_t *tryAllocateOld(Heap *heap, size_t size, _Bool grow);
+void collectGarbage(struct Thread *thread);
+void markAndSweep(struct Thread *thread);
+void verifyHeap(Heap *heap);
+void printHeap(Heap *heap);
 
 #endif

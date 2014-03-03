@@ -137,7 +137,7 @@ static void processPrimitivePragma(Compiler *compiler, MessageExpressionNode *pr
 	return;
 
 error:
-	error = (CompileError *) scopeHandle(allocateObject(Handles.InvalidPragmaError->raw, 0));
+	error = (CompileError *) newObject(Handles.InvalidPragmaError, 0);
 	compileErrorSetVariable(error, (LiteralNode *) pragma);
 	compiler->error = error;
 }
@@ -471,7 +471,7 @@ static void notePosition(Compiler *compiler, SourceCode *sourceCode)
 static CompiledMethod *createMethod(Compiler *compiler, MethodNode *node, Class *class)
 {
 	size_t size = compiler->buffer.p - compiler->buffer.buffer;
-	CompiledMethod *method = (CompiledMethod *) scopeHandle(allocateObject(Handles.CompiledMethod->raw, size));
+	CompiledMethod *method = (CompiledMethod *) newObject(Handles.CompiledMethod, size);
 	compiledMethodSetHeader(method, compiler->header);
 	compiledMethodSetSelector(method, asSymbol(methodNodeGetSelector(node)));
 	compiledMethodSetLiterals(method, ordCollAsArray(compiler->literals));
@@ -509,7 +509,7 @@ static void setupMethodToBlocks(OrderedCollection *literals, CompiledMethod *met
 static CompiledBlock *createBlock(Compiler *compiler, BlockNode *node)
 {
 	size_t size = compiler->buffer.p - compiler->buffer.buffer;
-	CompiledBlock *block = (CompiledBlock *) scopeHandle(allocateObject(Handles.CompiledBlock->raw, size));
+	CompiledBlock *block = (CompiledBlock *) newObject(Handles.CompiledBlock, size);
 	compiledBlockSetHeader(block, compiler->header);
 	compiledBlockSetSourceCode(block, blockNodeGetSourceCode(node));
 	compiledBlockSetDescriptors(block, ordCollAsArray(compiler->descriptors));
@@ -520,7 +520,7 @@ static CompiledBlock *createBlock(Compiler *compiler, BlockNode *node)
 
 CompileError *createUndefinedVariableError(LiteralNode *node)
 {
-	CompileError *error = (CompileError *) scopeHandle(allocateObject(Handles.UndefinedVariableError->raw, 0));
+	CompileError *error = (CompileError *) newObject(Handles.UndefinedVariableError, 0);
 	objectStorePtr((Object *) error,  &error->raw->variable, (Object *) node);
 	return error;
 }
@@ -528,7 +528,7 @@ CompileError *createUndefinedVariableError(LiteralNode *node)
 
 CompileError *createRedefinitionError(LiteralNode *var)
 {
-	CompileError *error = (CompileError *) scopeHandle(allocateObject(Handles.RedefinitionError->raw, 0));
+	CompileError *error = (CompileError *) newObject(Handles.RedefinitionError, 0);
 	objectStorePtr((Object *) error,  &error->raw->variable, (Object *) var);
 	return error;
 }

@@ -5,11 +5,10 @@
 #define FRAME_CODE_OFFSET 0
 #define CONTEXT_SLOT 1
 
+#include "Thread.h"
 #include "Object.h"
 #include "CompiledCode.h"
 #include <stdint.h>
-
-struct Thread;
 
 typedef struct StackFrame {
 	// Value temps[];
@@ -28,7 +27,7 @@ typedef struct EntryStackFrame {
 typedef struct {
 	OBJECT_HEADER;
 	Value size;
-	struct Thread *thread;
+	Thread *thread;
 	StackFrame *frame;
 	Value ic;
 	Value code;

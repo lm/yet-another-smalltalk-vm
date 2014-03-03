@@ -1,4 +1,5 @@
 #include "Smalltalk.h"
+#include "Thread.h"
 #include "Heap.h"
 #include "Handle.h"
 #include "StackFrame.h"
@@ -129,9 +130,9 @@ static void swapObjectPointers(Object *old, Object *new)
 static void swapObjectInNewSpace(Object *old, Object *new)
 {
 	size_t objects = 0;
-	RawObject *object = (RawObject *) ((uintptr_t) _Heap.newSpace.fromSpace | NEW_SPACE_TAG);
+	RawObject *object = (RawObject *) ((uintptr_t) CurrentThread.heap.newSpace.fromSpace | NEW_SPACE_TAG);
 	RawObject *prev = NULL;
-	RawObject *end = (RawObject *) _Heap.newSpace.top;
+	RawObject *end = (RawObject *) CurrentThread.heap.newSpace.top;
 	while (object < end) {
 		objects++;
 		iterateObject(object, old, new);
@@ -144,7 +145,7 @@ static void swapObjectInNewSpace(Object *old, Object *new)
 static void swapObjectInOldSpace(Object *old, Object *new)
 {
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.oldSpace);
+	pageSpaceIteratorInit(&iterator, &CurrentThread.heap.oldSpace);
 	RawObject *object = pageSpaceIteratorNext(&iterator);
 	while (object != NULL) {
 		if ((object->tags & TAG_FREESPACE) != 0) {

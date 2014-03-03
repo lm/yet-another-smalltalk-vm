@@ -1,4 +1,5 @@
 #include "String.h"
+#include "Thread.h"
 #include "Heap.h"
 #include "Smalltalk.h"
 #include "Handle.h"
@@ -8,7 +9,7 @@
 
 String *newString(size_t size)
 {
-	return (String *) scopeHandle(allocateObject(Handles.String->raw, size));
+	return (String *) newObject(Handles.String, size);
 }
 
 

@@ -5,6 +5,7 @@
 #include "CodeDescriptors.h"
 #include "AssemblerX64.h"
 #include "Thread.h"
+#include "StackFrame.h"
 #include "Handle.h"
 #include "Smalltalk.h"
 
@@ -157,6 +158,7 @@ static void generateAllocate(CodeGenerator *generator)
 	ptrdiff_t sizeOffset = offsetof(RawClass, instanceShape) + offsetof(InstanceShape, size);
 	ptrdiff_t varsOffset = offsetof(RawClass, instanceShape) + offsetof(InstanceShape, varsSize);
 	ptrdiff_t isBytesOffset = offsetof(RawClass, instanceShape) + offsetof(InstanceShape, isBytes);
+	ptrdiff_t scavengerOffset = offsetof(Thread, heap) + offsetof(Heap, newSpace);
 	ptrdiff_t payloadOffset = offsetof(RawClass, instanceShape) + offsetof(InstanceShape, payloadSize);
 	ptrdiff_t isIndexedOffset = offsetof(RawClass, instanceShape) + offsetof(InstanceShape, isIndexed);
 
@@ -172,25 +174,25 @@ static void generateAllocate(CodeGenerator *generator)
 	asmInitLabel(&zeroBytes);
 	asmInitLabel(&zeroBytesLoop);
 
-	// RDI: class
-	// RSI: indexed variables size
+	// RSI: class
+	// RDX: indexed variables size
 
 	// load instance and variables size
-	asmMovzxwMemq(buffer, asmMem(RDI, NO_REGISTER, SS_1, sizeOffset), RCX); // RCX: instance size
-	asmMovzxbMemq(buffer, asmMem(RDI, NO_REGISTER, SS_1, varsOffset), RDX); // RDX: instance variables size
+	asmMovzxwMemq(buffer, asmMem(RSI, NO_REGISTER, SS_1, sizeOffset), RCX); // RCX: instance size
+	asmMovzxbMemq(buffer, asmMem(RSI, NO_REGISTER, SS_1, varsOffset), RDI); // RDI: instance variables size
 
 	// add indexed fields size
-	asmTestbMemImm(buffer, asmMem(RDI, NO_REGISTER, SS_1, isBytesOffset), 1);
+	asmTestbMemImm(buffer, asmMem(RSI, NO_REGISTER, SS_1, isBytesOffset), 1);
 	asmJ(buffer, COND_NOT_ZERO, &bytes);
 
 	// pointers shape
-	asmLeaq(buffer, asmMem(RCX, RSI, SS_8, 0), RCX); // RCX: instance size
-	asmAddq(buffer, RSI, RDX); // RDX: instance variables size
+	asmLeaq(buffer, asmMem(RCX, RDX, SS_8, 0), RCX); // RCX: instance size
+	asmAddq(buffer, RDX, RDI); // RDI: instance variables size
 	asmJmpLabel(buffer, &align);
 
 	// bytes shape
 	asmLabelBind(buffer, &bytes, asmOffset(buffer));
-	asmAddq(buffer, RSI, RCX); // RCX: instance size
+	asmAddq(buffer, RDX, RCX); // RCX: instance size
 
 	// align
 	asmLabelBind(buffer, &align, asmOffset(buffer));
@@ -198,18 +200,18 @@ static void generateAllocate(CodeGenerator *generator)
 	asmAndqImm(buffer, RCX, -HEAP_OBJECT_ALIGN); // RCX: aligned size
 
 	// check free space
-	asmMovqImm(buffer, (int64_t) &_Heap.newSpace, RBX); // RBX: scavenger
-	asmMovqMem(buffer, asmMem(RBX, NO_REGISTER, SS_1, offsetof(Scavenger, end)), TMP); // TMP: scavenger end
-	asmMovqMem(buffer, asmMem(RBX, NO_REGISTER, SS_1, offsetof(Scavenger, top)), RAX); // RAX: new object
+	asmMovqMem(buffer, asmMem(CTX, NO_REGISTER, SS_1, varOffset(RawContext, thread)), RBX); // RBX: thread
+	asmMovqMem(buffer, asmMem(RBX, NO_REGISTER, SS_1, scavengerOffset + offsetof(Scavenger, end)), TMP); // TMP: scavenger end
+	asmMovqMem(buffer, asmMem(RBX, NO_REGISTER, SS_1, scavengerOffset + offsetof(Scavenger, top)), RAX); // RAX: new object
 	asmSubq(buffer, RAX, TMP); // TMP: scavenger free space
 	asmCmpq(buffer, RCX, TMP);
 	asmJ(buffer, COND_ABOVE, &noFreeSpace);
 
 	// move top cursor
-	asmAddqToMem(buffer, RCX, asmMem(RBX, NO_REGISTER, SS_1, offsetof(Scavenger, top)));
+	asmAddqToMem(buffer, RCX, asmMem(RBX, NO_REGISTER, SS_1, scavengerOffset + offsetof(Scavenger, top)));
 
 	// class
-	asmMovqToMem(buffer, RDI, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawObject, class)));
+	asmMovqToMem(buffer, RSI, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawObject, class)));
 	// header
 	asmMovq(buffer, RAX, TMP); // TMP: object hash
 	asmShrqImm(buffer, TMP, 2);
@@ -218,15 +220,15 @@ static void generateAllocate(CodeGenerator *generator)
 	asmMovqToMem(buffer, TMP, asmMem(RAX, NO_REGISTER, SS_1, sizeof(Value)));
 	asmMovq(buffer, RAX, R8);
 
-	asmTestbMemImm(buffer, asmMem(RDI, NO_REGISTER, SS_1, isIndexedOffset), 1);
+	asmTestbMemImm(buffer, asmMem(RSI, NO_REGISTER, SS_1, isIndexedOffset), 1);
 	asmJ(buffer, COND_ZERO, &notIndexed);
-	asmMovqToMem(buffer, RSI, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawIndexedObject, size)));
+	asmMovqToMem(buffer, RDX, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawIndexedObject, size)));
 	asmLeaq(buffer, asmMem(R8, NO_REGISTER, SS_1, sizeof(Value)), R8);
 
 	asmLabelBind(buffer, &notIndexed, asmOffset(buffer));
 
 	// zero payload
-	asmMovzxbMemq(buffer, asmMem(RDI, NO_REGISTER, SS_1, payloadOffset), RBX);
+	asmMovzxbMemq(buffer, asmMem(RSI, NO_REGISTER, SS_1, payloadOffset), RBX); // RBX: payload size
 	asmCmpqImm(buffer, RBX, 0);
 	asmMovbToMem(buffer, BL, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawObject, payloadSize))); // store payload size in instance
 	asmLeaq(buffer, asmMem(R8, RBX, SS_8, offsetof(RawObject, body)), RCX); // save pointer to inst vars
@@ -240,10 +242,10 @@ static void generateAllocate(CodeGenerator *generator)
 	asmLabelBind(buffer, &noPayload, asmOffset(buffer));
 
 	// nil variables
-	asmCmpqImm(buffer, RDX, 0);
+	asmCmpqImm(buffer, RDI, 0);
 	asmJ(buffer, COND_EQUAL, &noVars);
 	generateLoadObject(buffer, Handles.nil->raw, TMP, 1);
-	asmMovq(buffer, RDX, RBX);
+	asmMovq(buffer, RDI, RBX);
 	asmMovbToMem(buffer, BL, asmMem(RAX, NO_REGISTER, SS_1, offsetof(RawObject, varsSize)));
 
 	asmLabelBind(buffer, &varsLoop, asmOffset(buffer));
@@ -254,12 +256,12 @@ static void generateAllocate(CodeGenerator *generator)
 	asmLabelBind(buffer, &noVars, asmOffset(buffer));
 
 	// zero bytes
-	asmTestbMemImm(buffer, asmMem(RDI, NO_REGISTER, SS_1, isBytesOffset), 1);
+	asmTestbMemImm(buffer, asmMem(RSI, NO_REGISTER, SS_1, isBytesOffset), 1);
 	asmJ(buffer, COND_ZERO, &noBytes);
-	asmCmpqImm(buffer, RSI, 0);
+	asmCmpqImm(buffer, RDX, 0);
 	asmJ(buffer, COND_EQUAL, &zeroBytes);
-	asmMovq(buffer, RSI, RBX);
-	asmLeaq(buffer, asmMem(RCX, RDX, SS_8, 0), RCX);
+	asmMovq(buffer, RDX, RBX);
+	asmLeaq(buffer, asmMem(RCX, RDI, SS_8, 0), RCX);
 
 	asmLabelBind(buffer, &zeroBytesLoop, asmOffset(buffer));
 	asmMovbMemImm(buffer, 0, asmMem(RCX, RBX, SS_1, -1));
@@ -273,7 +275,8 @@ static void generateAllocate(CodeGenerator *generator)
 	asmRet(buffer);
 
 	asmLabelBind(buffer, &noFreeSpace, asmOffset(buffer));
-	generateCCall(generator, (intptr_t) allocateObject, 2, 0);
+	asmLeaq(buffer, asmMem(RBX, NO_REGISTER, SS_1, offsetof(Thread, heap)), RDI);
+	generateCCall(generator, (intptr_t) allocateObject, 3, 0);
 	asmIncq(buffer, RAX);
 	asmRet(buffer);
 }
@@ -312,7 +315,7 @@ static void generateDoesNotUnderstandStub(CodeGenerator *generator)
 	asmPushq(buffer, RDI);
 
 	// allocate arguments array
-	generateLoadObject(buffer, (RawObject *) Handles.Array->raw, RDI, 0);
+	generateLoadObject(buffer, (RawObject *) Handles.Array->raw, RSI, 0);
 	generateStubCall(generator, &AllocateStub);
 
 	// fill arguments array from stack
@@ -331,8 +334,8 @@ static void generateDoesNotUnderstandStub(CodeGenerator *generator)
 	generator->frameSize++;
 
 	// allocate message
-	generateLoadObject(buffer, (RawObject *) Handles.Message->raw, RDI, 0);
-	asmXorq(buffer, RSI, RSI);
+	generateLoadObject(buffer, (RawObject *) Handles.Message->raw, RSI, 0);
+	asmXorq(buffer, RDX, RDX);
 	generateStubCall(generator, &AllocateStub);
 
 	// fill message
@@ -365,8 +368,8 @@ StubCode DoesNotUnderstandStub = { .generator = generateDoesNotUnderstandStub, .
 static CompiledMethod *createDoesNotUnderstandCode(void)
 {
 	CompiledCodeHeader header = { 0 };
-	CompiledMethod *method = handle(allocateObject(Handles.CompiledMethod->raw, 0));
-	SourceCode *source = scopeHandle(allocateObject(Handles.SourceCode->raw, 0));
+	CompiledMethod *method = handle(allocateObject(&CurrentThread.heap, Handles.CompiledMethod->raw, 0));
+	SourceCode *source = newObject(Handles.SourceCode, 0);
 	sourceCodeSetSourceOrFileName(source, asString("_doesNotUnderstand []"));
 	sourceCodeSetPosition(source, 0);
 	sourceCodeSetSourceSize(source, 0);

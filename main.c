@@ -1,4 +1,3 @@
-#include "vm/Heap.h"
 #include "vm/Bootstrap.h"
 #include "vm/Snapshot.h"
 #include "vm/Entry.h"
@@ -19,7 +18,7 @@ int main(int argc, char **args)
 	int result = EXIT_SUCCESS;
 
 	parseCliArgs(&cliArgs, argc, args);
-	initHeap();
+	initThread(&CurrentThread);
 	bootstrapSmalltalk(cliArgs.snapshotFileName, cliArgs.bootstrapDir);
 
 	if (cliArgs.error != NULL) {
@@ -42,7 +41,7 @@ int main(int argc, char **args)
 	}
 
 	freeHandles();
-	freeHeap();
+	freeThread(&CurrentThread);
 	return result;
 }
 
@@ -66,7 +65,6 @@ static void bootstrapSmalltalk(char *snapshotFileName, char *bootstrapDir)
 			exit(EXIT_FAILURE);
 		}
 		snapshotRead(snapshot);
-		initThread(&CurrentThread);
 	}
 	fclose(snapshot);
 }

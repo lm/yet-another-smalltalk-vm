@@ -210,7 +210,7 @@ static void analyzeAssigment(BlockScope *blockScope, LiteralNode *literal)
 
 static CompileError *createReadonlyVariableError(LiteralNode *node)
 {
-	CompileError *error = (CompileError *) scopeHandle(allocateObject(Handles.ReadonlyVariableError->raw, 0));
+	CompileError *error = (CompileError *) newObject(Handles.ReadonlyVariableError, 0);
 	objectStorePtr((Object *) error,  &error->raw->variable, (Object *) node);
 	return error;
 }
@@ -360,7 +360,7 @@ static _Bool analyzeDictionaryVar(BlockScope *blockScope, Dictionary *dict, Stri
 
 static BlockScope *createBlockScope(BlockScope *parent)
 {
-	BlockScope *blockScope = (BlockScope *) scopeHandle(allocateObject(Handles.BlockScope->raw, 0));
+	BlockScope *blockScope = (BlockScope *) newObject(Handles.BlockScope, 0);
 	memset(&blockScope->raw->header, 0, sizeof(blockScope->raw->header));
 	blockScopeSetParent(blockScope, parent);
 	blockScopeSetVars(blockScope, newDictionary(32));

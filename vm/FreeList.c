@@ -96,8 +96,8 @@ static ptrdiff_t indexForSize(size_t size)
 
 void freeListAddFreeSpace(FreeList *freeList, FreeSpace *freeSpace)
 {
-	ASSERT(pageSpaceIncludes(&_Heap.oldSpace, (uint8_t *) freeSpace)
-		|| pageSpaceIncludes(&_Heap.execSpace, (uint8_t *) freeSpace));
+	//ASSERT(pageSpaceIncludes(&_Heap.oldSpace, (uint8_t *) freeSpace)
+	//	|| pageSpaceIncludes(&_Heap.execSpace, (uint8_t *) freeSpace));
 	ptrdiff_t index = indexForSize(freeSpace->size);
 	freeSpace->next = freeList->freeSpaces[index];
 	freeList->freeSpaces[index] = freeSpace;
@@ -135,8 +135,8 @@ static FreeSpace *popAndSplitFreeSpace(FreeList *freeList, ptrdiff_t index, size
 static FreeSpace *splitFreeSpace(FreeList *freeList, FreeSpace *freeSpace, size_t size)
 {
 	ASSERT(freeSpace->size > size);
-	ASSERT(pageSpaceIncludes(&_Heap.oldSpace, (uint8_t *) freeSpace)
-		|| pageSpaceIncludes(&_Heap.execSpace, (uint8_t *) freeSpace));
+	//ASSERT(pageSpaceIncludes(&_Heap.oldSpace, (uint8_t *) freeSpace)
+	//	|| pageSpaceIncludes(&_Heap.execSpace, (uint8_t *) freeSpace));
 	size_t newSize = freeSpace->size - size;
 	FreeSpace *newFreeSpace = createFreeSpace((uint8_t *) freeSpace + size, newSize);
 	freeListAddFreeSpace(freeList, newFreeSpace);

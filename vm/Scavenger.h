@@ -3,7 +3,10 @@
 
 #include "HeapPage.h"
 
+struct Heap;
+
 typedef struct {
+	struct Heap *heap;
 	HeapPage *page;
 	size_t size;
 	_Bool hasPromotionFailure;
@@ -14,7 +17,7 @@ typedef struct {
 	uint8_t *survivorEnd;
 } Scavenger;
 
-void initScavenger(Scavenger *scavenger, size_t size);
+void initScavenger(Scavenger *scavenger, struct Heap *heap, size_t size);
 void freeScavenger(Scavenger *scavenger);
 uint8_t *scavengerTryAllocate(Scavenger *scavenger, size_t size);
 void scavengerScavenge(Scavenger *scavenger);

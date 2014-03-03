@@ -27,6 +27,7 @@ Value invokeMethod(CompiledMethod *method, EntryArgs *args)
 
 	Value rawArgs[args->size];
 	initArgs(rawArgs, args);
+	initThreadContext(&CurrentThread);
 	Value result = entry(method->raw, getNativeCode(class, method)->insts, rawArgs, &CurrentThread);
 
 	closeHandleScope(&scope, NULL);
@@ -55,6 +56,7 @@ Value sendMessage(String *selector, EntryArgs *args)
 	NativeCode *nativeCode = (NativeCode *) ((uint8_t *) nativeCodeEntry - offsetof(NativeCode, insts));
 	Value rawArgs[args->size];
 	initArgs(rawArgs, args);
+	initThreadContext(&CurrentThread);
 	return entry(nativeCode->compiledCode, nativeCodeEntry, rawArgs, &CurrentThread);
 }
 
@@ -209,7 +211,7 @@ static Value evalBlockNode(BlockNode *block)
 	openHandleScope(&scope);
 
 	Value result;
-	MethodNode *node = scopeHandle(allocateObject(Handles.MethodNode->raw, 0));
+	MethodNode *node = newObject(Handles.MethodNode, 0);
 	methodNodeSetSelector(node, asString("eval"));
 	methodNodeSetPragmas(node, newOrdColl(0));
 	methodNodeSetBody(node, block);

@@ -9,6 +9,7 @@
 #include "CompiledCode.h"
 #include "CodeDescriptors.h"
 #include "Thread.h"
+#include "StackFrame.h"
 
 LookupTable LookupCache = {
 	.classes = { NULL },
@@ -68,7 +69,7 @@ static void feedbackType(Class *class)
 		}
 	}
 
-	TypeFeedback *type = scopeHandle(allocateObject(Handles.TypeFeedback->raw, 0));
+	TypeFeedback *type = newObject(Handles.TypeFeedback, 0);
 	type->raw->ic = tagInt(entryFrame->exit->parentIc - code->insts);
 	type->raw->hintedClass = getTaggedPtr(class);
 	ordCollAddObject(typeFeedback, (Object *) type);

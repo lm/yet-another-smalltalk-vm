@@ -2,6 +2,7 @@
 #define CLASS_H
 
 #include "Object.h"
+#include "Thread.h"
 #include "Parser.h"
 #include "Collection.h"
 #include "Dictionary.h"

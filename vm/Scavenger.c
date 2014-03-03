@@ -19,8 +19,9 @@ static void forwardObject(Scavenger *scavenger, RawObject *object);
 static void iterateObject(Scavenger *scavenger, RawObject *root);
 
 
-void initScavenger(Scavenger *scavenger, size_t size)
+void initScavenger(Scavenger *scavenger, Heap *heap, size_t size)
 {
+	scavenger->heap = heap;
 	scavenger->page = mapHeapPage(size, 0);
 	size_t semiSpaceSize = scavenger->page->bodySize / 2;
 	uint8_t *start = scavenger->page->body;
@@ -92,7 +93,7 @@ _Bool scavengerIncludes(Scavenger *scavenger, uint8_t *addr)
 
 static void iterateStack(Scavenger *scavenger)
 {
-	EntryStackFrame *entryFrame = CurrentThread.stackFramesTail;
+	EntryStackFrame *entryFrame = scavenger->heap->thread->stackFramesTail;
 	while (entryFrame != NULL) {
 		StackFrame *prev = entryFrame->exit;
 		StackFrame *frame = stackFrameGetParent(prev, entryFrame);
@@ -154,14 +155,15 @@ static void iterateExceptionHandlers(Scavenger *scavenger)
 
 static void iterateHandles(Scavenger *scavenger)
 {
+	Thread *thread = scavenger->heap->thread;
 	HandlesIterator handlesIterator;
-	initHandlesIterator(&handlesIterator);
+	initHandlesIterator(&handlesIterator, thread->handles);
 	while (handlesIteratorHasNext(&handlesIterator)) {
 		processPointer(scavenger, &handlesIteratorNext(&handlesIterator)->raw);
 	}
 
 	HandleScopeIterator handleScopeIterator;
-	initHandleScopeIterator(&handleScopeIterator);
+	initHandleScopeIterator(&handleScopeIterator, thread->handleScopes);
 	while (handleScopeIteratorHasNext(&handleScopeIterator)) {
 		HandleScope *scope = handleScopeIteratorNext(&handleScopeIterator);
 		for (ptrdiff_t i = 0; i < scope->size; i++) {
@@ -169,8 +171,8 @@ static void iterateHandles(Scavenger *scavenger)
 		}
 	}
 
-	if (CurrentThread.context != 0) {
-		processTaggedPointer(scavenger, &CurrentThread.context);
+	if (thread->context != 0) {
+		processTaggedPointer(scavenger, &thread->context);
 	}
 }
 
@@ -178,7 +180,7 @@ static void iterateHandles(Scavenger *scavenger)
 static void iterateRememberedSet(Scavenger *scavenger)
 {
 	RememberedSetIterator iterator;
-	initRememberedSetIterator(&iterator, &_Heap.rememberedSet);
+	initRememberedSetIterator(&iterator, &scavenger->heap->rememberedSet);
 	while (rememberedSetIteratorHasNext(&iterator)) {
 		iterateObject(scavenger, rememberedSetIteratorNext(&iterator));
 	}
@@ -188,7 +190,7 @@ static void iterateRememberedSet(Scavenger *scavenger)
 static void iterateNativeCode(Scavenger *scavenger)
 {
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.execSpace);
+	pageSpaceIteratorInit(&iterator, &scavenger->heap->execSpace);
 	NativeCode *code = (NativeCode *) pageSpaceIteratorNext(&iterator);
 
 	while (code != NULL) {
@@ -273,10 +275,10 @@ static void forwardObject(Scavenger *scavenger, RawObject *object)
 	object->tags &= ~TAG_MARKED;
 
 	if ((uint8_t *) object < scavenger->survivorEnd) {
-		newObject = (RawObject *) tryAllocateOld(size, scavenger->hasPromotionFailure);
+		newObject = (RawObject *) tryAllocateOld(scavenger->heap, size, scavenger->hasPromotionFailure);
 		if (newObject == NULL) {
 			scavenger->hasPromotionFailure = 1;
-			newObject = (RawObject *) tryAllocateOld(size, 1);
+			newObject = (RawObject *) tryAllocateOld(scavenger->heap, size, 1);
 		}
 	} else {
 		newObject = (RawObject *) scavengerTryAllocate(scavenger, size);
@@ -309,6 +311,6 @@ static void iterateObject(Scavenger *scavenger, RawObject *root)
 	}
 
 	if (remember && isOldObject(root) && (root->tags & TAG_REMEMBERED) == 0) {
-		rememberedSetAdd(&_Heap.rememberedSet, root);
+		rememberedSetAdd(&scavenger->heap->rememberedSet, root);
 	}
 }
