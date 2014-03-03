@@ -2,6 +2,7 @@
 #define OBJECT_H
 
 #include "Assert.h"
+#include "Os.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -107,6 +108,16 @@ typedef struct {
 } RawAssociation;
 OBJECT_HANDLE(Association);
 
+struct Thread;
+
+typedef struct {
+	OBJECT_HEADER;
+	struct Thread *thread;
+	OsThread osThread;
+	Value block;
+} RawProcess;
+OBJECT_HANDLE(Process);
+
 #define COMPUTE_INST_SHAPE_SIZE(aPayloadSize, aVarsSize, aIsIndexed) \
 	HEADER_SIZE + ((aIsIndexed) + (aPayloadSize) + (aVarsSize)) * sizeof(Value)
 #define DEFINE_INST_SHAPE(aPayloadSize, aVarsSize, aIsIndexed, aIsBytes, aValueType) { \
@@ -127,6 +138,7 @@ static InstanceShape CompiledCodeShape = DEFINE_INST_SHAPE(1, 0, 1, 1, VALUE_INT
 static InstanceShape BlockShape = DEFINE_INST_SHAPE(1, 0, 0, 0, 0);
 static InstanceShape ContextShape = DEFINE_INST_SHAPE(2, 0, 1, 0, VALUE_POINTER);
 static InstanceShape ExceptionHandlerShape = DEFINE_INST_SHAPE(1, 2, 0, 0, VALUE_POINTER);
+static InstanceShape ProcessShape = DEFINE_INST_SHAPE(sizeof(OsThread) / sizeof(Value) + 1, 0, 0, 0, 0);
 
 #define varOffset(type, member) (offsetof(type, member) - 1)
 

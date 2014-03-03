@@ -117,6 +117,7 @@ static void initSmalltalkStubs(void)
 	setGlobal("BlockShape", *(Value *) &BlockShape);
 	setGlobal("ContextShape", *(Value *) &ContextShape);
 	setGlobal("ExceptionHandlerShape", *(Value *) &ExceptionHandlerShape);
+	setGlobal("ProcessShape", *(Value *) &ProcessShape);
 
 	setGlobalObject("Symbol", (Object *) Handles.Symbol);
 	setGlobalObject("String", (Object *) Handles.String);

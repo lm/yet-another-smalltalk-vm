@@ -58,6 +58,7 @@ static PrimitiveResult socketAcceptPrimitive(Value socket);
 static PrimitiveResult socketHostLookupPrimitive(Value class, Value vHost);
 static PrimitiveResult lastIoErrorPrimitive(Value receiver);
 static PrimitiveResult currentMicroTimePrimitive(Value receiver);
+static PrimitiveResult processCreatePrimitive(Value receiver);
 static PrimitiveResult initParserPrimitive(Value receiver, Value string);
 static PrimitiveResult initStreamParserPrimitive(Value receiver, Value string);
 static PrimitiveResult freeParserPrimitive(Value receiver);
@@ -144,6 +145,7 @@ Primitive Primitives[] = {
 	{"LastIoErrorPrimitive", CCALL, .cFunction = lastIoErrorPrimitive, 1},
 
 	{"CurrentMicroTimePrimitive", CCALL, .cFunction = currentMicroTimePrimitive, 1},
+	{"ProcessCreatePrimitive", CCALL, .cFunction = processCreatePrimitive, 1},
 
 	{"GCPrimitive", CCALL, .cFunction = collectGarbagePrimitive, 1},
 	{"LastGCStatsPrimitive", CCALL, .cFunction = lastGcStatsPrimitive, 1},
@@ -396,6 +398,35 @@ static PrimitiveResult lastIoErrorPrimitive(Value receiver)
 static PrimitiveResult currentMicroTimePrimitive(Value receiver)
 {
 	return primSuccess(tagInt(osCurrentMicroTime()));
+}
+
+
+static void *processMain(void *arg)
+{
+	HandleScope scope;
+	openHandleScope(&scope);
+
+	initThread(&CurrentThread);
+
+	Process *process = arg;
+	Block *block = scopeHandle(asObject(process->raw->block));
+	//freeHandle(process);
+
+	EntryArgs args = { .size = 0 };
+	entryArgsAddObject(&args, (Object *) block);
+	sendMessage(Handles.valueSymbol, &args);
+
+	closeHandleScope(&scope, NULL);
+	osExitThread(NULL);
+	return NULL;
+}
+
+
+static PrimitiveResult processCreatePrimitive(Value receiver)
+{
+	Process *process = handle(asObject(receiver));
+	osCreateThread(&process->raw->osThread, processMain, process);
+	return primSuccess(getTaggedPtr(process));
 }
 
 

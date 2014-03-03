@@ -104,7 +104,7 @@ Object subclass: Block [
 	"schedulling"
 
 	fork [
-		Error signal.
+		^Process new initializeBlock: self; resume
 	]
 
 

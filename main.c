@@ -4,6 +4,7 @@
 #include "vm/Repl.h"
 #include "vm/Thread.h"
 #include "vm/Cli.h"
+#include "vm/Os.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -40,6 +41,7 @@ int main(int argc, char **args)
 		runRepl();
 	}
 
+	osExitThread(NULL);
 	freeHandles();
 	freeThread(&CurrentThread);
 	return result;
