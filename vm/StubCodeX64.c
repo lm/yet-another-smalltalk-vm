@@ -62,7 +62,7 @@ void generateStubCall(CodeGenerator *generator, StubCode *stubCode)
 // RDI: compiled method
 // RSI: native code entry
 // RDX: arguments
-// RCX: context
+// RCX: thread
 static void generateSmalltalkEntry(CodeGenerator *generator)
 {
 	AssemblerBuffer *buffer = &generator->buffer;
