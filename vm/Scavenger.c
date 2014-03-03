@@ -52,9 +52,9 @@ uint8_t *scavengerTryAllocate(Scavenger *scavenger, size_t size)
 	}
 
 	uint8_t *result = scavenger->top;
-	scavenger->top += size;
 	ASSERT(((uintptr_t) result & SPACE_TAG) == NEW_SPACE_TAG);
 	ASSERT(scavenger->fromSpace <= result && result <= (scavenger->fromSpace + scavenger->size));
+	scavenger->top += size;
 	return result;
 }
 

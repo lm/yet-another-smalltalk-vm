@@ -1066,9 +1066,6 @@ static void generateBlockWhileTrue2(CodeGenerator *generator)
 }
 
 
-// RDI: a Block
-// RSI: Exception
-// RDX: an Exception block
 static void generateBlockOnExceptionPrimitive(CodeGenerator *generator)
 {
 	AssemblerBuffer *buffer = &generator->buffer;

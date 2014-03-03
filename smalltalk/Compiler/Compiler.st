@@ -64,7 +64,7 @@ Object subclass: Compiler [
 			i := i + 1].
 
 		method := self compileMethod: node in: UndefinedObject.
-		^method sendTo: nil	withArguments: args
+		^method sendTo: nil withArguments: args
 	]
 
 ]
