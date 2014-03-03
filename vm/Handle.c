@@ -1,11 +1,10 @@
 #include "Handle.h"
+#include "Thread.h"
 #include "Heap.h"
 #include "Assert.h"
 #include <stdlib.h>
 
-Handle *HeapHandles = NULL;
 SmalltalkHandles Handles = { NULL };
-HandleScope *ScopeTail = NULL;
 
 
 void freeHandle(void *handle)
@@ -14,7 +13,7 @@ void freeHandle(void *handle)
 	if (p->prev != NULL) {
 		p->prev->next = p->next;
 	} else {
-		HeapHandles = p->next;
+		CurrentThread.handles = p->next;
 	}
 	free(handle);
 }
@@ -22,8 +21,8 @@ void freeHandle(void *handle)
 
 void freeHandles(void)
 {
-	Handle *p = HeapHandles;
-	HeapHandles = NULL;
+	Handle *p = CurrentThread.handles;
+	CurrentThread.handles = NULL;
 	while (p != NULL) {
 		Handle *next = p->next;
 		free(p);
@@ -32,15 +31,15 @@ void freeHandles(void)
 }
 
 
-Object *newObject(Class *class, size_t size)
+void *newObject(Class *class, size_t size)
 {
-	return scopeHandle(allocateObject(class->raw, size));
+	return scopeHandle(allocateObject(&CurrentThread.heap, class->raw, size));
 }
 
 
 Object *copyResizedObject(Object *object, size_t newSize)
 {
-	Object *newObject = scopeHandle(allocateObject(object->raw->class, newSize));
+	Object *newObject = scopeHandle(allocateObject(&CurrentThread.heap, object->raw->class, newSize));
 	size_t size = objectSize(object);
 	size = computeInstanceSize(object->raw->class->instanceShape, newSize > size ? size : newSize);
 	size_t offset = HEADER_SIZE + object->raw->class->instanceShape.isIndexed * sizeof(Value);
@@ -49,9 +48,9 @@ Object *copyResizedObject(Object *object, size_t newSize)
 }
 
 
-void initHandlesIterator(HandlesIterator *iterator)
+void initHandlesIterator(HandlesIterator *iterator, Handle *handles)
 {
-	iterator->current = HeapHandles;
+	iterator->current = handles;
 }
 
 
@@ -69,9 +68,9 @@ Object *handlesIteratorNext(HandlesIterator *iterator)
 }
 
 
-void initHandleScopeIterator(HandleScopeIterator *iterator)
+void initHandleScopeIterator(HandleScopeIterator *iterator, HandleScope *scopes)
 {
-	iterator->current = ScopeTail;
+	iterator->current = scopes;
 }
 
 

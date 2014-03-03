@@ -361,7 +361,7 @@ static PrimitiveResult socketHostLookupPrimitive(Value class, Value vHost)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	InternetAddress *addr = scopeHandle(allocateObject((RawClass *) asObject(class), 0));
+	InternetAddress *addr = newObject(scopeHandle(asObject(class)), 0);
 	String *host = (String *) scopeHandle(asObject(vHost));
 
 	char space[256];
@@ -508,7 +508,7 @@ static void freeParserWithinParserObject(ParserObject *parserObj, Parser *parser
 static ParseError *createParserError(Parser *parser)
 {
 	Token *token = currentToken(&parser->tokenizer);
-	ParseError *error = scopeHandle(allocateObject(Handles.ParseError->raw, 0));
+	ParseError *error = newObject(Handles.ParseError, 0);
 	objectStorePtr((Object *) error, &error->raw->token, (Object *) asString(token->content));
 	objectStorePtr((Object *) error, &error->raw->sourceCode, (Object *) createSourceCode(parser, 1));
 	return error;
@@ -550,14 +550,14 @@ static PrimitiveResult compileMethodPrimitive(Value receiver, Value vNode, Value
 
 static PrimitiveResult collectGarbagePrimitive(Value receiver)
 {
-	collectGarbage();
+	collectGarbage(&CurrentThread);
 	return primSuccess(receiver);
 }
 
 
 static PrimitiveResult printHeapPrimitive(Value receiver)
 {
-	printHeap();
+	printHeap(&CurrentThread.heap);
 	return primSuccess(receiver);
 }
 

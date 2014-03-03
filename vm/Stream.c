@@ -1,4 +1,5 @@
 #include "Stream.h"
+#include "Thread.h"
 #include "Handle.h"
 #include "Heap.h"
 #include "Assert.h"
@@ -117,7 +118,7 @@ IoError *getLastIoError(void)
 
 	char msg[256] = "IoError: ";
 	strerror_r(errno, msg + 9, 256 - 9);
-	IoError *error = scopeHandle(allocateObject(Handles.IoError->raw, 0));
+	IoError *error = newObject(Handles.IoError, 0);
 	objectStorePtr((Object *) error,  &error->raw->messageText, (Object *) asString(msg));
 
 	return closeHandleScope(&scope, error);

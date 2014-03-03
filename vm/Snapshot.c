@@ -1,4 +1,6 @@
 #include "Snapshot.h"
+#include "Thread.h"
+#include "Heap.h"
 #include "Object.h"
 #include "Heap.h"
 #include "Handle.h"
@@ -67,13 +69,13 @@ void snapshotWrite(FILE *file)
 static void iterateHandles(Snapshot *snapshot)
 {
 	HandlesIterator handlesIterator;
-	initHandlesIterator(&handlesIterator);
+	initHandlesIterator(&handlesIterator, CurrentThread.handles);
 	while (handlesIteratorHasNext(&handlesIterator)) {
 		writeNewObject(snapshot, handlesIteratorNext(&handlesIterator)->raw);
 	}
 
 	HandleScopeIterator handleScopeIterator;
-	initHandleScopeIterator(&handleScopeIterator);
+	initHandleScopeIterator(&handleScopeIterator, CurrentThread.handleScopes);
 	while (handleScopeIteratorHasNext(&handleScopeIterator)) {
 		HandleScope *scope = handleScopeIteratorNext(&handleScopeIterator);
 		for (ptrdiff_t i = 0; i < scope->size; i++) {
@@ -235,7 +237,7 @@ static Value readObject(int64_t field, Snapshot *snapshot)
 	size_t size = shape.varsSize;
 	size_t indexedSize = shape.isIndexed ? readInt64(snapshot) : 0;
 
-	RawObject *object = (RawObject *) allocate(computeInstanceSize(shape, indexedSize));
+	RawObject *object = (RawObject *) allocate(&CurrentThread.heap, computeInstanceSize(shape, indexedSize));
 	snapshotDictAtPut(&snapshot->dict, id, tagPtr(object));
 
 	if (shape.isIndexed) {

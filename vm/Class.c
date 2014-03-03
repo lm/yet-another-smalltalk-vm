@@ -1,4 +1,5 @@
 #include "Class.h"
+#include "Heap.h"
 #include "Handle.h"
 #include "Smalltalk.h"
 #include "Heap.h"
@@ -94,13 +95,13 @@ static _Bool resolveSuperClass(ClassNode *node, MetaClass **superMetaClass, Clas
 
 static Class *subClass(ClassNode *node, MetaClass *superMetaClass, Class *superClass)
 {
-	MetaClass *metaClass = (MetaClass *) scopeHandle(allocateObject(Handles.MetaClass->raw, 0));
+	MetaClass *metaClass = (MetaClass *) newObject(Handles.MetaClass, 0);
 	metaClassSetSuperClass(metaClass, superMetaClass);
 	metaClassSetSubClasses(metaClass, newOrdColl(16));
 	metaClassSetInstanceShape(metaClass, metaClassGetInstanceShape(superMetaClass));
 	metaClassSetInstanceVariables(metaClass, metaClassGetInstanceVariables(superMetaClass));
 
-	Class *class = (Class *) scopeHandle(allocateObject((RawClass *) metaClass->raw, 0));
+	Class *class = (Class *) newObject((Class *) metaClass, 0);
 	classSetSuperClass(class, superClass);
 	classSetSubClasses(class, newOrdColl(16));
 	classSetName(class, asSymbol(literalNodeGetStringValue(classNodeGetName(node))));
@@ -153,7 +154,7 @@ static CompileError *processShapePragma(MessageExpressionNode *pragma, Class *cl
 	return NULL;
 
 error:
-	error = (CompileError *) scopeHandle(allocateObject(Handles.InvalidPragmaError->raw, 0));
+	error = (CompileError *) newObject(Handles.InvalidPragmaError, 0);
 	compileErrorSetVariable(error, (LiteralNode *) pragma);
 	return error;
 }
@@ -259,7 +260,7 @@ static CompileError *compileAndInstallMethod(MethodNode *node, Class *class, Dic
 
 static CompileError *createMethodRedefinitionError(MethodNode *node)
 {
-	LiteralNode *literal = scopeHandle(allocateObject(Handles.VariableNode->raw, 0));
+	LiteralNode *literal = newObject(Handles.VariableNode, 0);
 	literalNodeSetValue(literal, (Object *) methodNodeGetSelector(node));
 	literalNodeSetSourceCode(literal, methodNodeGetSourceCode(node));
 	return createRedefinitionError(literal)	;

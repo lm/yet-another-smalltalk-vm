@@ -33,7 +33,7 @@ RawContext *stackFrameGetParentContext(StackFrame *frame)
 	Value contextSlotValue = stackFrameGetSlot(parent, CONTEXT_SLOT);
 	RawContext *context;
 	if (contextSlotValue == CurrentThread.context) {
-		context = (RawContext *) allocateObject(Handles.MethodContext->raw, 0);
+		context = (RawContext *) allocateObject(&CurrentThread.heap, Handles.MethodContext->raw, 0);
 		context->frame = parent;
 		context->code = tagPtr(stackFrameGetNativeCode(parent)->compiledCode);
 		stackFrameSetSlot(parent, CONTEXT_SLOT, tagPtr(context));

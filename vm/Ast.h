@@ -2,6 +2,7 @@
 #define AST_H
 
 #include "Object.h"
+#include "Thread.h"
 #include "Heap.h"
 #include "String.h"
 #include "Collection.h"

@@ -357,9 +357,9 @@ static void generateBehaviorNewPrimitive(CodeGenerator *generator)
 	asmPushq(buffer, R11);
 	generatePushDummyContext(buffer);
 
-	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RDI);
-	asmDecq(buffer, RDI);
-	asmXorq(buffer, RSI, RSI);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RSI);
+	asmDecq(buffer, RSI);
+	asmXorq(buffer, RDX, RDX);
 	generateStubCall(generator, &AllocateStub);
 
 	asmMovq(buffer, RBP, RSP);
@@ -382,15 +382,15 @@ static void generateBehaviorNewSizePrimitive(CodeGenerator *generator)
 	asmPushq(buffer, R11);
 	generatePushDummyContext(buffer);
 
-	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 3 * sizeof(intptr_t)), RSI);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 3 * sizeof(intptr_t)), RDX);
 
 	// check if size is int
-	testInt(generator, SIL);
+	testInt(generator, DL);
 	asmJ(buffer, COND_NOT_ZERO, &notInt);
 
-	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RDI);
-	asmDecq(buffer, RDI);
-	asmShrqImm(buffer, RSI, 2);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RSI);
+	asmDecq(buffer, RSI);
+	asmShrqImm(buffer, RDX, 2);
 	generateStubCall(generator, &AllocateStub);
 
 	asmMovq(buffer, RBP, RSP);
@@ -1083,8 +1083,8 @@ static void generateBlockOnExceptionPrimitive(CodeGenerator *generator)
 	generateMethodContextAllocation(generator, 0);
 
 	// allocate exception handler
-	generateLoadObject(buffer, (RawObject *) Handles.ExceptionHandler->raw, RDI, 0);
-	asmXorq(buffer, RSI, RSI);
+	generateLoadObject(buffer, (RawObject *) Handles.ExceptionHandler->raw, RSI, 0);
+	asmXorq(buffer, RDX, RDX);
 	generateStubCall(generator, &AllocateStub);
 	// setup return IP
 	asmMovqImm(buffer, 0, TMP);

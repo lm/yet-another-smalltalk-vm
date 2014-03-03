@@ -1,4 +1,5 @@
 #include "Bootstrap.h"
+#include "Thread.h"
 #include "Object.h"
 #include "Smalltalk.h"
 #include "Dictionary.h"
@@ -24,7 +25,6 @@ static _Bool parseKernelFiles(char *kernelDir);
 _Bool bootstrap(char *kernelDir)
 {
 	initSmalltalkStubs();
-	initThread(&CurrentThread);
 	registerPrimitives();
 	return parseKernelFiles(kernelDir);
 }
@@ -186,7 +186,7 @@ static Class *newStubClass(Class *metaClass, InstanceShape shape, size_t instanc
 
 static Class *newStubMetaClass(InstanceShape shape, size_t instanceSize)
 {
-	RawObject *object = (RawObject *) allocate(sizeof(RawMetaClass));
+	RawObject *object = (RawObject *) allocate(&CurrentThread.heap, sizeof(RawMetaClass));
 	object->hash = (Value) object >> 2; // XXX: replace with random hash generator
 	object->payloadSize = 0;
 	object->varsSize = 0;
@@ -211,7 +211,7 @@ static Class *newStubMetaClass(InstanceShape shape, size_t instanceSize)
 
 static Object *newStubObject(size_t size)
 {
-	RawObject *object = (RawObject *) allocate(size);
+	RawObject *object = (RawObject *) allocate(&CurrentThread.heap, size);
 	object->hash = (Value) object >> 2; // XXX: replace with random hash generator
 	object->payloadSize = 0;
 	object->varsSize = 0;

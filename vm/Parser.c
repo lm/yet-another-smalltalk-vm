@@ -126,7 +126,7 @@ ClassNode *parseClass(Parser *parser)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	ClassNode *class = scopeHandle(allocateObject(Handles.ClassNode->raw, 0));
+	ClassNode *class = newObject(Handles.ClassNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
 	Token *token = currentToken(&parser->tokenizer);
 	OrderedCollection *tmp;
@@ -192,8 +192,8 @@ MethodNode *parseMethod(Parser *parser)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	MethodNode *method = scopeHandle(allocateObject(Handles.MethodNode->raw, 0));
-	BlockNode *block = scopeHandle(allocateObject(Handles.BlockNode->raw, 0));
+	MethodNode *method = newObject(Handles.MethodNode, 0);
+	BlockNode *block = newObject(Handles.BlockNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
 	OrderedCollection *args = newOrdColl(16);
 	Object *tmp;
@@ -444,7 +444,7 @@ static ExpressionNode *parseExpression(Parser *parser)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	ExpressionNode *expression = scopeHandle(allocateObject(Handles.ExpressionNode->raw, 0));
+	ExpressionNode *expression = newObject(Handles.ExpressionNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
 	Object *receiver;
 	OrderedCollection *messageExpressions;
@@ -554,7 +554,7 @@ static Object *parseUnaryObject(Parser *parser)
 
 static ExpressionNode *convertToExpression(LiteralNode *literal, MessageExpressionNode *messageExpression)
 {
-	ExpressionNode *expression = scopeHandle(allocateObject(Handles.ExpressionNode->raw, 0));
+	ExpressionNode *expression = newObject(Handles.ExpressionNode, 0);
 	OrderedCollection *messageExpressions = newOrdColl(8);
 
 	expressionNodeSetSourceCode(expression, literalNodeGetSourceCode(literal));
@@ -630,7 +630,7 @@ BlockNode *parseBlock(Parser *parser)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	BlockNode *block = scopeHandle(allocateObject(Handles.BlockNode->raw, 0));
+	BlockNode *block = newObject(Handles.BlockNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
 	Object *tmp;
 
@@ -736,7 +736,7 @@ static Object *parseLiteral(Parser *parser)
  */
 static LiteralNode *parseNumber(Parser *parser, int8_t sign)
 {
-	LiteralNode *literal = scopeHandle(allocateObject(Handles.IntegerNode->raw, 0));
+	LiteralNode *literal = newObject(Handles.IntegerNode, 0);
 	literalNodeSetSourceCode(literal, createSourceCode(parser, 1));
 	CATCH(SignedValue value = parseInteger(parser), NULL);
 	literalNodeSetIntValue(literal, value * sign);
@@ -774,7 +774,7 @@ static SignedValue parseInteger(Parser *parser)
  */
 static LiteralNode *parseSymbol(Parser *parser)
 {
-	LiteralNode *literal = scopeHandle(allocateObject(Handles.SymbolNode->raw, 0));
+	LiteralNode *literal = newObject(Handles.SymbolNode, 0);
 	Token *token;
 
 	NEXT_EXPECT_TOKEN(token, TOKEN_IDENTIFIER | TOKEN_KEYWORD | SPECIAL_CHARS_TOKENS | TOKEN_STRING, NULL);
@@ -807,7 +807,7 @@ static LiteralNode *parseSymbol(Parser *parser)
  */
 static LiteralNode *parseString(Parser *parser)
 {
-	LiteralNode *literal = scopeHandle(allocateObject(Handles.StringNode->raw, 0));
+	LiteralNode *literal = newObject(Handles.StringNode, 0);
 	literalNodeSetValue(literal, (Object *) asString(currentToken(&parser->tokenizer)->content));
 	literalNodeSetSourceCode(literal, createSourceCode(parser, 1));
 	nextToken(&parser->tokenizer);
@@ -821,7 +821,7 @@ static LiteralNode *parseString(Parser *parser)
 static LiteralNode *parseChar(Parser *parser)
 {
 	Token *token = currentToken(&parser->tokenizer);
-	LiteralNode *literal = scopeHandle(allocateObject(Handles.CharacterNode->raw, 0));
+	LiteralNode *literal = newObject(Handles.CharacterNode, 0);
 	literalNodeSetSourceCode(literal, createSourceCode(parser, 1));
 	if (strcmp("$<", token->content) == 0 && peekToken(&parser->tokenizer)->type == TOKEN_DIGIT) {
 		nextToken(&parser->tokenizer);
@@ -845,7 +845,7 @@ static LiteralNode *parseArray(Parser *parser)
 	HandleScope scope;
 	openHandleScope(&scope);
 
-	LiteralNode *arrayLiteral = scopeHandle(allocateObject(Handles.ArrayNode->raw, 0));
+	LiteralNode *arrayLiteral = newObject(Handles.ArrayNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
 	OrderedCollection *array = newOrdColl(16);
 
@@ -1024,7 +1024,7 @@ static MessageExpressionNode *parseKeywordExpression(Parser *parser)
 
 static MessageExpressionNode *createMessageExpressionNode(String *selector, OrderedCollection *args, SourceCode *source)
 {
-	MessageExpressionNode *node = scopeHandle(allocateObject(Handles.MessageExpressionNode->raw, 0));
+	MessageExpressionNode *node = newObject(Handles.MessageExpressionNode, 0);
 	messageExpressionNodeSetSelector(node, selector);
 	messageExpressionNodeSetArgs(node, args);
 	messageExpressionNodeSetSourceCode(node, source);

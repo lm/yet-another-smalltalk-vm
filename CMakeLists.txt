@@ -8,7 +8,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_C_FLAGS "-std=gnu99 -pedantic -Wno-flexible-array-extensions -Wno-c11-extensions -Wno-gnu")
 #set(CMAKE_C_FLAGS "-std=gnu99 -pedantic -Wno-flexible-array-extensions -Wno-c11-extensions -fsanitize=undefined")
 
-#find_package(Threads)
+find_package(Threads)
 
 add_library(CityHash STATIC cityhash/city.c)
 add_library(Linenoise STATIC linenoise/linenoise.c)

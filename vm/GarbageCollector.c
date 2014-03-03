@@ -19,11 +19,11 @@ typedef struct {
 	ptrdiff_t index;
 } MarkingQueue;
 
-static void iterateStack(MarkingQueue *queue);
-static void iterateHandles(MarkingQueue *queue);
-static void iterateNativeCode(MarkingQueue *queue);
-static void iterateObject(MarkingQueue *queue, RawObject *root);
-static void markObject(MarkingQueue *queue, RawObject *object);
+static void iterateStack(MarkingQueue *queue, Thread *thread);
+static void iterateHandles(MarkingQueue *queue, Thread *thread);
+static void iterateNativeCode(MarkingQueue *queue, Thread *thread);
+static void iterateObject(MarkingQueue *queue, Thread *thread, RawObject *root);
+static void markObject(MarkingQueue *queue, Thread *thread, RawObject *object);
 static void markingQueueAdd(MarkingQueue *queue, RawObject *object);
 static _Bool markingQueueIsEmpty(MarkingQueue *queue);
 static RawObject *markingQueuePop(MarkingQueue *queue);
@@ -32,35 +32,35 @@ static _Bool hasFinalizer(RawObject *object);
 GCStats LastGCStats = { 0 };
 
 
-void gcMarkRoots(void)
+void gcMarkRoots(Thread *thread)
 {
 	MarkingQueue queue = {
 		.size = QUEUE_INIT_SIZE,
 		.objects = malloc(QUEUE_INIT_SIZE * sizeof(RawObject *)),
 		.index = 0,
 	};
-	iterateStack(&queue);
-	iterateHandles(&queue);
-	iterateNativeCode(&queue);
+	iterateStack(&queue, thread);
+	iterateHandles(&queue, thread);
+	iterateNativeCode(&queue, thread);
 
 	while (!markingQueueIsEmpty(&queue)) {
-		iterateObject(&queue, markingQueuePop(&queue));
+		iterateObject(&queue, thread, markingQueuePop(&queue));
 	}
 
 	free(queue.objects);
 }
 
 
-static void iterateStack(MarkingQueue *queue)
+static void iterateStack(MarkingQueue *queue, Thread *thread)
 {
-	EntryStackFrame *entryFrame = CurrentThread.stackFramesTail;
+	EntryStackFrame *entryFrame = thread->stackFramesTail;
 	while (entryFrame != NULL) {
 		StackFrame *prev = entryFrame->exit;
 		StackFrame *frame = stackFrameGetParent(prev, entryFrame);
 
 		Value value = stackFrameGetSlot	(prev, 0);
 		if (valueTypeOf(value, VALUE_POINTER)) {
-			markObject(queue, asObject(value));
+			markObject(queue, thread, asObject(value));
 		}
 
 		while (frame != NULL) {
@@ -69,7 +69,7 @@ static void iterateStack(MarkingQueue *queue)
 			for (ptrdiff_t i = 0; i < argsSize; i++) {
 				Value value = stackFrameGetArg(frame, i);
 				if (valueTypeOf(value, VALUE_POINTER)) {
-					markObject(queue, asObject(value));
+					markObject(queue, thread, asObject(value));
 				}
 			}
 
@@ -80,7 +80,7 @@ static void iterateStack(MarkingQueue *queue)
 				if (stackmapIncludes(stackmap, i)) {
 					Value value = stackFrameGetSlot(frame, i);
 					if (valueTypeOf(value, VALUE_POINTER)) {
-						markObject(queue, asObject(value));
+						markObject(queue, thread, asObject(value));
 					}
 				}
 			}
@@ -93,56 +93,56 @@ static void iterateStack(MarkingQueue *queue)
 }
 
 
-static void iterateHandles(MarkingQueue *queue)
+static void iterateHandles(MarkingQueue *queue, Thread *thread)
 {
 	HandlesIterator handlesIterator;
-	initHandlesIterator(&handlesIterator);
+	initHandlesIterator(&handlesIterator, thread->handles);
 	while (handlesIteratorHasNext(&handlesIterator)) {
-		markObject(queue, handlesIteratorNext(&handlesIterator)->raw);
+		markObject(queue, thread, handlesIteratorNext(&handlesIterator)->raw);
 	}
 
 	HandleScopeIterator handleScopeIterator;
-	initHandleScopeIterator(&handleScopeIterator);
+	initHandleScopeIterator(&handleScopeIterator, thread->handleScopes);
 	while (handleScopeIteratorHasNext(&handleScopeIterator)) {
 		HandleScope *scope = handleScopeIteratorNext(&handleScopeIterator);
 		for (ptrdiff_t i = 0; i < scope->size; i++) {
-			markObject(queue, scope->handles[i].raw);
+			markObject(queue, thread, scope->handles[i].raw);
 		}
 	}
 
 	if (CurrentThread.context != 0) {
-		markObject(queue, asObject(CurrentThread.context));
+		markObject(queue, thread, asObject(CurrentThread.context));
 	}
 }
 
 
-static void iterateNativeCode(MarkingQueue *queue)
+static void iterateNativeCode(MarkingQueue *queue, Thread *thread)
 {
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.execSpace);
+	pageSpaceIteratorInit(&iterator, &thread->heap.execSpace);
 	NativeCode *code = (NativeCode *) pageSpaceIteratorNext(&iterator);
 
 	while (code != NULL) {
 		if ((code->tags & TAG_FREESPACE) == 0) {
 			if (code->compiledCode != NULL) {
-				markObject(queue, (RawObject *) code->compiledCode);
+				markObject(queue, thread, (RawObject *) code->compiledCode);
 			}
 			if (code->stackmaps != NULL) {
-				markObject(queue, (RawObject *) code->stackmaps);
+				markObject(queue, thread, (RawObject *) code->stackmaps);
 			}
 			if (code->descriptors != NULL) {
-				markObject(queue, (RawObject *) code->descriptors);
+				markObject(queue, thread, (RawObject *) code->descriptors);
 			}
 			if (code->typeFeedback != NULL) {
-				markObject(queue, (RawObject *) code->typeFeedback);
+				markObject(queue, thread, (RawObject *) code->typeFeedback);
 			}
 			for (size_t i = 0; i < code->pointersOffsetsSize; i++) {
 				uint16_t offset = ((uint16_t *) (code->insts + code->size))[i];
 				Value value = *(Value *) (code->insts + offset);
 				if (valueTypeOf(value, VALUE_POINTER)) {
-					markObject(queue, asObject(value));
+					markObject(queue, thread, asObject(value));
 				} else {
-					markObject(queue, (RawObject *) value);
+					markObject(queue, thread, (RawObject *) value);
 				}
 			}
 		}
@@ -151,10 +151,10 @@ static void iterateNativeCode(MarkingQueue *queue)
 }
 
 
-static void iterateObject(MarkingQueue *queue, RawObject *root)
+static void iterateObject(MarkingQueue *queue, Thread *thread, RawObject *root)
 {
 	_Bool remember = isNewObject((RawObject *) root->class);
-	markObject(queue, (RawObject *) root->class);
+	markObject(queue, thread, (RawObject *) root->class);
 
 	Value *vars = getRawObjectVars(root);
 	size_t size = root->class->instanceShape.varsSize;
@@ -166,20 +166,20 @@ static void iterateObject(MarkingQueue *queue, RawObject *root)
 		if (valueTypeOf(vars[i], VALUE_POINTER)) {
 			RawObject *object = asObject(vars[i]);
 			remember = remember || isNewObject(object);
-			markObject(queue, object);
+			markObject(queue, thread, object);
 		}
 	}
 
 	root->tags = root->tags & ~TAG_REMEMBERED;
 	if (remember && isOldObject(root)) {
-		rememberedSetAdd(&_Heap.rememberedSet, root);
+		rememberedSetAdd(&thread->heap.rememberedSet, root);
 	}
 }
 
 
-static void markObject(MarkingQueue *queue, RawObject *object)
+static void markObject(MarkingQueue *queue, Thread *thread, RawObject *object)
 {
-	ASSERT(isOldObject(object) || (_Heap.newSpace.fromSpace <= (uint8_t *) object && (uint8_t *) object <= (_Heap.newSpace.fromSpace + _Heap.newSpace.size)));
+	ASSERT(isOldObject(object) || (thread->heap.newSpace.fromSpace <= (uint8_t *) object && (uint8_t *) object <= (thread->heap.newSpace.fromSpace + thread->heap.newSpace.size)));
 	if (object->tags & TAG_MARKED) {
 		return;
 	}
@@ -217,7 +217,7 @@ static _Bool markingQueueIsEmpty(MarkingQueue *queue)
 void gcSweep(PageSpace *space)
 {
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.oldSpace);
+	pageSpaceIteratorInit(&iterator, space);
 	RawObject *object = pageSpaceIteratorNext(&iterator);
 	RawObject *prev = NULL;
 
@@ -237,7 +237,7 @@ void gcSweep(PageSpace *space)
 				LastGCStats.extended++;
 				LastGCStats.sweeped++;*/
 			} else {
-				freeObject(object);
+				freeObject(space, object);
 				prev = object;
 				LastGCStats.freed++;
 				LastGCStats.sweeped++;

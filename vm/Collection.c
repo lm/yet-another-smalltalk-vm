@@ -1,5 +1,7 @@
 #include "Collection.h"
+#include "Thread.h"
 #include "Smalltalk.h"
+#include "Thread.h"
 #include "Heap.h"
 #include "Handle.h"
 #include "Class.h"
@@ -12,7 +14,7 @@ static _Bool compareValues(Object *object, Value value);
 
 Array *newArray(size_t size)
 {
-	return scopeHandle(allocateObject(Handles.Array->raw, size));
+	return newObject(Handles.Array, size);
 }
 
 
@@ -48,8 +50,8 @@ OrderedCollection *arrayAsOrdColl(Array *array)
 
 OrderedCollection *newOrdColl(size_t size)
 {
-	OrderedCollection *collection = scopeHandle(allocateObject(Handles.OrderedCollection->raw, 0));
-	RawObject *contents = allocateObject(Handles.Array->raw, size);
+	OrderedCollection *collection = newObject(Handles.OrderedCollection, 0);
+	RawObject *contents = allocateObject(&CurrentThread.heap, Handles.Array->raw, size);
 	rawObjectStorePtr((RawObject *) collection->raw, &collection->raw->contents, contents);
 	collection->raw->firstIndex = tagInt(1);
 	collection->raw->lastIndex = 0;
@@ -65,7 +67,7 @@ void ordCollAdd(OrderedCollection *collection, Value value)
 	size_t size = ordCollSize(collection);
 
 	if (size == contents->raw->size) {
-		Array *newContents = scopeHandle(allocateObject(Handles.Array->raw, size + 8));
+		Array *newContents = newObject(Handles.Array, size + 8);
 		memcpy(newContents->raw->vars, contents->raw->vars, size * sizeof(Value));
 		objectStorePtr((Object *) collection, &collection->raw->contents, (Object *) newContents);
 		contents = newContents;
@@ -84,7 +86,7 @@ void ordCollAddObject(OrderedCollection *collection, Object *object)
 	size_t size = ordCollSize(collection);
 
 	if (size == contents->raw->size) {
-		Array *newContents = scopeHandle(allocateObject(Handles.Array->raw, size + 8));
+		Array *newContents = newObject(Handles.Array, size + 8);
 		memcpy(newContents->raw->vars, contents->raw->vars, size * sizeof(Value));
 		objectStorePtr((Object *) collection, &collection->raw->contents, (Object *) newContents);
 		contents = newContents;

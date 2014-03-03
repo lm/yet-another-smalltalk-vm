@@ -13,36 +13,35 @@
 #define SCAVENGE_EVERY_ALLOC 0
 #define VERIFY_HEAP_AFTER_GC 0
 
-Heap _Heap = { .rememberedSet = { 0 } };
-
 static void nilVars(Value *vars, size_t count);
 static uint8_t *pageSpaceAllocate(PageSpace *pageSpace, size_t size);
 static void emptyRememberedSet(void);
-static void verifyObject(RawObject *object);
-static void verifyPointer(RawObject *object);
+static void verifyObject(Heap *heap, RawObject *object);
+static void verifyPointer(Heap *heap, RawObject *object);
 static void printHeapPage(HeapPage *page);
 static void printFreeSpace(FreeSpace *freeSpace);
 static void printPageSpace(PageSpace *space);
 
 
-void initHeap(void)
+void initHeap(Heap *heap, struct Thread *thread)
 {
-	initScavenger(&_Heap.newSpace, 32 * MB);
-	initPageSpace(&_Heap.oldSpace, 256 * KB, 0);
-	initPageSpace(&_Heap.execSpace, 256 * KB, 1);
-	initRememberedSet(&_Heap.rememberedSet);
+	heap->thread = thread;
+	initScavenger(&heap->newSpace, heap, 32 * MB);
+	initPageSpace(&heap->oldSpace, 256 * KB, 0);
+	initPageSpace(&heap->execSpace, 256 * KB, 1);
+	initRememberedSet(&heap->rememberedSet);
 }
 
 
-void freeHeap(void)
+void freeHeap(Heap *heap)
 {
-	freeScavenger(&_Heap.newSpace);
-	freePageSpace(&_Heap.oldSpace);
-	freePageSpace(&_Heap.execSpace);
+	freeScavenger(&heap->newSpace);
+	freePageSpace(&heap->oldSpace);
+	freePageSpace(&heap->execSpace);
 }
 
 
-RawObject *allocateObject(RawClass *class, size_t size)
+RawObject *allocateObject(Heap *heap, RawClass *class, size_t size)
 {
 	HandleScope scope;
 	openHandleScope(&scope);
@@ -51,9 +50,9 @@ RawObject *allocateObject(RawClass *class, size_t size)
 	size_t realSize = computeInstanceSize(class->instanceShape, size);
 	Class *classHandle = scopeHandle(class);
 #if SCAVENGE_EVERY_ALLOC
-	scavengerScavenge(&_Heap.newSpace);
+	scavengerScavenge(&heap->newSpace);
 #endif
-	RawObject *object = (RawObject *) allocate(realSize);
+	RawObject *object = (RawObject *) allocate(heap, realSize);
 
 	object->class = classHandle->raw;
 	object->hash = (Value) object >> 2; // XXX: replace with random hash generator
@@ -90,17 +89,17 @@ static void nilVars(Value *vars, size_t count)
 }
 
 
-void freeObject(RawObject *object)
+void freeObject(PageSpace *space, RawObject *object)
 {
 	FreeSpace *freeSpace = createFreeSpace((uint8_t *) object, align(computeRawObjectSize(object), HEAP_OBJECT_ALIGN));
-	freeListAddFreeSpace(&_Heap.oldSpace.freeList, freeSpace);
+	freeListAddFreeSpace(&space->freeList, freeSpace);
 }
 
 
-NativeCode *allocateNativeCode(size_t size, size_t pointersOffsetsSize)
+NativeCode *allocateNativeCode(Heap *heap, size_t size, size_t pointersOffsetsSize)
 {
 	size_t realSize = align(sizeof(NativeCode) + size + pointersOffsetsSize * sizeof(uint16_t), HEAP_OBJECT_ALIGN);
-	NativeCode *code = (NativeCode *) pageSpaceAllocate(&_Heap.execSpace, realSize);
+	NativeCode *code = (NativeCode *) pageSpaceAllocate(&heap->execSpace, realSize);
 	code->size = size;
 	code->pointersOffsetsSize = pointersOffsetsSize;
 	code->tags = 0;
@@ -124,86 +123,87 @@ static uint8_t *pageSpaceAllocate(PageSpace *pageSpace, size_t size)
 }
 
 
-uint8_t *allocate(size_t size)
+uint8_t *allocate(Heap *heap, size_t size)
 {
 	size_t realSize = align(size, HEAP_OBJECT_ALIGN);
-	uint8_t *p = scavengerTryAllocate(&_Heap.newSpace, realSize);
+	uint8_t *p = scavengerTryAllocate(&heap->newSpace, realSize);
 	if (p == NULL) {
-		scavengerScavenge(&_Heap.newSpace);
-		if (_Heap.newSpace.hasPromotionFailure) {
-			markAndSweep();
+		scavengerScavenge(&heap->newSpace);
+		if (heap->newSpace.hasPromotionFailure) {
+			markAndSweep(&CurrentThread);
 		}
-		p = scavengerTryAllocate(&_Heap.newSpace, realSize);
+		p = scavengerTryAllocate(&heap->newSpace, realSize);
 	}
 	if (p == NULL) {
-		p = tryAllocateOld(realSize, 1);
+		p = tryAllocateOld(heap, realSize, 1);
 	}
 	return p;
 }
 
 
-uint8_t *tryAllocateOld(size_t size, _Bool grow)
+uint8_t *tryAllocateOld(Heap *heap, size_t size, _Bool grow)
 {
 	size_t realSize = align(size, HEAP_OBJECT_ALIGN);
-	uint8_t *p = pageSpaceTryAllocate(&_Heap.oldSpace, realSize);
+	uint8_t *p = pageSpaceTryAllocate(&heap->oldSpace, realSize);
 	if (p == NULL && grow) {
-		p = pageSpaceAllocate(&_Heap.oldSpace, realSize);
+		p = pageSpaceAllocate(&heap->oldSpace, realSize);
 	}
+	ASSERT(p == NULL || isOldObject((RawObject *) p));
 	return p;
 }
 
 
-void collectGarbage(void)
+void collectGarbage(Thread *thread)
 {
-	scavengerScavenge(&_Heap.newSpace);
-	markAndSweep();
+	scavengerScavenge(&thread->heap.newSpace);
+	markAndSweep(thread);
 }
 
 
-void markAndSweep(void)
+void markAndSweep(Thread *thread)
 {
 	resetGcStats();
 	LastGCStats.count++;
 	int64_t startTime = osCurrentMicroTime();
 
-	rememberedSetReset(&_Heap.rememberedSet);
-	gcMarkRoots();
-	gcSweep(&_Heap.oldSpace);
+	rememberedSetReset(&thread->heap.rememberedSet);
+	gcMarkRoots(thread);
+	gcSweep(&thread->heap.oldSpace);
 
 	LastGCStats.time = osCurrentMicroTime() - startTime;
 	LastGCStats.totalTime += LastGCStats.time;
 
 #if VERIFY_HEAP_AFTER_GC
-	verifyHeap();
+	verifyHeap(&thread->heap);
 #endif
 }
 
 
-void verifyHeap(void)
+void verifyHeap(Heap *heap)
 {
-	RawObject *object = (RawObject *) ((uintptr_t) _Heap.newSpace.fromSpace | NEW_SPACE_TAG);
+	RawObject *object = (RawObject *) ((uintptr_t) heap->newSpace.fromSpace | NEW_SPACE_TAG);
 
-	while ((uint8_t *) object < _Heap.newSpace.top) {
-		verifyObject(object);
+	while ((uint8_t *) object < heap->newSpace.top) {
+		verifyObject(heap, object);
 		object = (RawObject *) ((uint8_t *) object + align(computeRawObjectSize(object), HEAP_OBJECT_ALIGN));
 	}
 
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.oldSpace);
+	pageSpaceIteratorInit(&iterator, &heap->oldSpace);
 	object = pageSpaceIteratorNext(&iterator);
 
 	while (object != NULL) {
 		if ((object->tags & TAG_FREESPACE) == 0) {
-			verifyObject(object);
+			verifyObject(heap, object);
 		}
 		object = pageSpaceIteratorNext(&iterator);
 	}
 }
 
 
-static void verifyObject(RawObject *object)
+static void verifyObject(Heap *heap, RawObject *object)
 {
-	verifyPointer((RawObject *) object->class);
+	verifyPointer(heap, (RawObject *) object->class);
 
 	Value *vars = getRawObjectVars(object);
 	size_t size = object->class->instanceShape.varsSize;
@@ -213,35 +213,35 @@ static void verifyObject(RawObject *object)
 
 	for (size_t i = 0; i < size; i++) {
 		if (valueTypeOf(vars[i], VALUE_POINTER)) {
-			verifyPointer(asObject(vars[i]));
+			verifyPointer(heap, asObject(vars[i]));
 		}
 	}
 }
 
 
-static void verifyPointer(RawObject *object)
+static void verifyPointer(Heap *heap, RawObject *object)
 {
-	if (scavengerIncludes(&_Heap.newSpace, (uint8_t *) object)) {
+	if (scavengerIncludes(&heap->newSpace, (uint8_t *) object)) {
 		return;
 	}
-	if (pageSpaceIncludes(&_Heap.oldSpace, (uint8_t *) object)) {
+	if (pageSpaceIncludes(&heap->oldSpace, (uint8_t *) object)) {
 		return;
 	}
 	FAIL();
 }
 
 
-void printHeap(void)
+void printHeap(Heap *heap)
 {
 	printf("Scavenger\n\t");
-	printHeapPage(_Heap.newSpace.page);
-	printf("\tfree space: %zi\n", _Heap.newSpace.top - _Heap.newSpace.fromSpace);
+	printHeapPage(heap->newSpace.page);
+	printf("\tfree space: %zi\n", heap->newSpace.top - heap->newSpace.fromSpace);
 
 	printf("Old space\n");
-	printPageSpace(&_Heap.oldSpace);
+	printPageSpace(&heap->oldSpace);
 
 	printf("Executable space\n");
-	printPageSpace(&_Heap.execSpace);
+	printPageSpace(&heap->execSpace);
 }
 
 

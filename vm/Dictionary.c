@@ -1,4 +1,5 @@
 #include "Dictionary.h"
+#include "Thread.h"
 #include "Smalltalk.h"
 #include "Heap.h"
 #include "Handle.h"
@@ -13,10 +14,10 @@ static size_t findIndex(RawArray *contents, DictComparator cmp, Value key, Value
 
 Dictionary *newDictionary(size_t size)
 {
-	Dictionary *dict = scopeHandle(allocateObject(Handles.Dictionary->raw, 0));
+	Dictionary *dict = newObject(Handles.Dictionary, 0);
 	// XXX: code bellow causes optimization bug in GCC:
-	// dict->raw->contents = tagPtr(allocateObject(Handles.Array->raw, size));
-	RawObject *contents = allocateObject(Handles.Array->raw, size);
+	// dict->raw->contents = tagPtr(allocateObject(&CurrentThread.heap, Handles.Array->raw, size));
+	RawObject *contents = allocateObject(&CurrentThread.heap, Handles.Array->raw, size);
 	rawObjectStorePtr((RawObject *) dict->raw, &dict->raw->contents, contents);
 	dict->raw->tally = 0;
 	return dict;
@@ -45,7 +46,7 @@ Association *dictAtPut(Dictionary *dict, DictComparator cmp, Object *key, Value 
 	Association *assoc = scopeHandle(asObject(contents->raw->vars[index]));
 
 	if (isNil(assoc)) {
-		assoc = scopeHandle(allocateObject(Handles.Association->raw, 0));
+		assoc = newObject(Handles.Association, 0);
 		objectStorePtr((Object *) assoc, &assoc->raw->key, key);
 		assoc->raw->value = value;
 
@@ -87,7 +88,7 @@ Association *dictAtPutObject(Dictionary *dict, DictComparator cmp, Object *key, 
 static void growDictionary(Dictionary *dict)
 {
 	Array *contents = scopeHandle((RawArray *) asObject(dict->raw->contents));
-	Array *newContents = scopeHandle(allocateObject(Handles.Array->raw, contents->raw->size * 2));
+	Array *newContents = newObject(Handles.Array, contents->raw->size * 2);
 	objectStorePtr((Object *) dict,  &dict->raw->contents, (Object *) newContents);
 
 	Iterator iterator;
@@ -116,7 +117,7 @@ static void growDictionary(Dictionary *dict)
 
 static Association *createAssoc(Object *key, Object *value)
 {
-	Association *assoc = scopeHandle(allocateObject(Handles.Association->raw, 0));
+	Association *assoc = newObject(Handles.Association, 0);
 	objectStorePtr((Object *) assoc, &assoc->raw->key, key);
 	objectStorePtr((Object *) assoc, &assoc->raw->value, value);
 	return assoc;

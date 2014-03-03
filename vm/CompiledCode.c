@@ -1,4 +1,5 @@
 #include "CompiledCode.h"
+#include "Thread.h"
 #include "Smalltalk.h"
 #include "Class.h"
 #include "Heap.h"
@@ -12,7 +13,7 @@ NativeCode *findNativeCodeAtIc(uint8_t *ic)
 {
 	PageSpaceIterator iterator;
 	NativeCode *obj;
-	pageSpaceIteratorInit(&iterator, &_Heap.execSpace);
+	pageSpaceIteratorInit(&iterator, &CurrentThread.heap.execSpace);
 	obj = (NativeCode *) pageSpaceIteratorNext(&iterator);
 	while (obj != NULL) {
 		if ((obj->tags & TAG_FREESPACE) == 0 && obj->insts <= ic && ic < obj->insts + obj->size) {
@@ -27,7 +28,7 @@ NativeCode *findNativeCodeAtIc(uint8_t *ic)
 void printMethodsUsage(void)
 {
 	PageSpaceIterator iterator;
-	pageSpaceIteratorInit(&iterator, &_Heap.execSpace);
+	pageSpaceIteratorInit(&iterator, &CurrentThread.heap.execSpace);
 	NativeCode *code = (NativeCode *) pageSpaceIteratorNext(&iterator);
 
 	while (code != NULL) {
