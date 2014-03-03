@@ -284,7 +284,7 @@ static void parseKernelFiles(char *kernelDir)
 		"GarbageCollector.st",
 		"Processes/ProcessorScheduler.st",
 		"Processes/Process.st",
-		// "Processes/Delay.st",
+		"Processes/Delay.st",
 
 		"Exception.st",
 		"Error.st",

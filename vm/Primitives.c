@@ -59,6 +59,7 @@ static PrimitiveResult socketHostLookupPrimitive(Value class, Value vHost);
 static PrimitiveResult lastIoErrorPrimitive(Value receiver);
 static PrimitiveResult currentMicroTimePrimitive(Value receiver);
 static PrimitiveResult processCreatePrimitive(Value receiver);
+static PrimitiveResult delayWaitPrimitive(Value receiver);
 static PrimitiveResult initParserPrimitive(Value receiver, Value string);
 static PrimitiveResult initStreamParserPrimitive(Value receiver, Value string);
 static PrimitiveResult freeParserPrimitive(Value receiver);
@@ -146,6 +147,7 @@ Primitive Primitives[] = {
 
 	{"CurrentMicroTimePrimitive", CCALL, .cFunction = currentMicroTimePrimitive, 1},
 	{"ProcessCreatePrimitive", CCALL, .cFunction = processCreatePrimitive, 1},
+	{"DelayWaitPrimitive", CCALL, .cFunction = delayWaitPrimitive, 1},
 
 	{"GCPrimitive", CCALL, .cFunction = collectGarbagePrimitive, 1},
 	{"LastGCStatsPrimitive", CCALL, .cFunction = lastGcStatsPrimitive, 1},
@@ -427,6 +429,20 @@ static PrimitiveResult processCreatePrimitive(Value receiver)
 	Process *process = handle(asObject(receiver));
 	osCreateThread(&process->raw->osThread, processMain, process);
 	return primSuccess(getTaggedPtr(process));
+}
+
+
+static PrimitiveResult delayWaitPrimitive(Value receiver)
+{
+	HandleScope scope;
+	openHandleScope(&scope);
+
+	Delay *delay = scopeHandle(asObject(receiver));
+	osSleep(asCInt(delay->raw->microseconds));
+
+	Value result = getTaggedPtr(delay);
+	closeHandleScope(&scope, NULL);
+	return primSuccess(result);
 }
 
 

@@ -27,3 +27,15 @@ void osExitThread(void *result)
 {
 	pthread_exit(result);
 }
+
+
+void osSleep(uint64_t microseconds)
+{
+	struct timespec toSleep = {
+		.tv_sec = microseconds / 1000000,
+		.tv_nsec = microseconds % 1000000,
+	};
+	if (nanosleep(&toSleep, NULL) != 0) {
+		FAIL()
+	};
+}

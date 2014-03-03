@@ -118,6 +118,12 @@ typedef struct {
 } RawProcess;
 OBJECT_HANDLE(Process);
 
+typedef struct {
+	OBJECT_HEADER;
+	Value microseconds;
+} RawDelay;
+OBJECT_HANDLE(Delay);
+
 #define COMPUTE_INST_SHAPE_SIZE(aPayloadSize, aVarsSize, aIsIndexed) \
 	HEADER_SIZE + ((aIsIndexed) + (aPayloadSize) + (aVarsSize)) * sizeof(Value)
 #define DEFINE_INST_SHAPE(aPayloadSize, aVarsSize, aIsIndexed, aIsBytes, aValueType) { \
