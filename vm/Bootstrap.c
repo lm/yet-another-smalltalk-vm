@@ -287,6 +287,7 @@ static void parseKernelFiles(char *kernelDir)
 		"Processes/Process.st",
 		"Processes/Delay.st",
 		"Processes/MutualExclusion.st",
+		"Processes/Semaphore.st",
 
 		"Exception.st",
 		"Error.st",
