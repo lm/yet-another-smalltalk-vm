@@ -118,6 +118,7 @@ static void initSmalltalkStubs(void)
 	setGlobal("ContextShape", *(Value *) &ContextShape);
 	setGlobal("ExceptionHandlerShape", *(Value *) &ExceptionHandlerShape);
 	setGlobal("ProcessShape", *(Value *) &ProcessShape);
+	setGlobal("MutexShape", *(Value *) &MutexShape);
 
 	setGlobalObject("Symbol", (Object *) Handles.Symbol);
 	setGlobalObject("String", (Object *) Handles.String);
@@ -285,6 +286,7 @@ static void parseKernelFiles(char *kernelDir)
 		"Processes/ProcessorScheduler.st",
 		"Processes/Process.st",
 		"Processes/Delay.st",
+		"Processes/MutualExclusion.st",
 
 		"Exception.st",
 		"Error.st",

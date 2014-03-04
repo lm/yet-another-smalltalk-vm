@@ -59,6 +59,10 @@ static PrimitiveResult socketHostLookupPrimitive(Value class, Value vHost);
 static PrimitiveResult lastIoErrorPrimitive(Value receiver);
 static PrimitiveResult currentMicroTimePrimitive(Value receiver);
 static PrimitiveResult processCreatePrimitive(Value receiver);
+static PrimitiveResult mutexInitPrimitive(Value receiver);
+static PrimitiveResult mutexFreePrimitive(Value receiver);
+static PrimitiveResult mutexLockPrimitive(Value receiver);
+static PrimitiveResult mutexUnlockPrimitive(Value receiver);
 static PrimitiveResult delayWaitPrimitive(Value receiver);
 static PrimitiveResult initParserPrimitive(Value receiver, Value string);
 static PrimitiveResult initStreamParserPrimitive(Value receiver, Value string);
@@ -147,6 +151,10 @@ Primitive Primitives[] = {
 
 	{"CurrentMicroTimePrimitive", CCALL, .cFunction = currentMicroTimePrimitive, 1},
 	{"ProcessCreatePrimitive", CCALL, .cFunction = processCreatePrimitive, 1},
+	{"MutexInitPrimitive", CCALL, .cFunction = mutexInitPrimitive, 1},
+	{"MutexFreePrimitive", CCALL, .cFunction = mutexFreePrimitive, 1},
+	{"MutexLockPrimitive", CCALL, .cFunction = mutexLockPrimitive, 1},
+	{"MutexUnlockPrimitive", CCALL, .cFunction = mutexUnlockPrimitive, 1},
 	{"DelayWaitPrimitive", CCALL, .cFunction = delayWaitPrimitive, 1},
 
 	{"GCPrimitive", CCALL, .cFunction = collectGarbagePrimitive, 1},
@@ -429,6 +437,38 @@ static PrimitiveResult processCreatePrimitive(Value receiver)
 	Process *process = handle(asObject(receiver));
 	osCreateThread(&process->raw->osThread, processMain, process);
 	return primSuccess(getTaggedPtr(process));
+}
+
+
+static PrimitiveResult mutexInitPrimitive(Value receiver)
+{
+	RawMutex *mutex = (RawMutex *) asObject(receiver);
+	osMutexInit(&mutex->osMutex);
+	return primSuccess(receiver);
+}
+
+
+static PrimitiveResult mutexFreePrimitive(Value receiver)
+{
+	RawMutex *mutex = (RawMutex *) asObject(receiver);
+	osMutexFree(&mutex->osMutex);
+	return primSuccess(receiver);
+}
+
+
+static PrimitiveResult mutexLockPrimitive(Value receiver)
+{
+	RawMutex *mutex = (RawMutex *) asObject(receiver);
+	osMutexLock(&mutex->osMutex);
+	return primSuccess(receiver);
+}
+
+
+static PrimitiveResult mutexUnlockPrimitive(Value receiver)
+{
+	RawMutex *mutex = (RawMutex *) asObject(receiver);
+	osMutexUnlock(&mutex->osMutex);
+	return primSuccess(receiver);
 }
 
 

@@ -29,6 +29,38 @@ void osExitThread(void *result)
 }
 
 
+void osMutexInit(OsMutex *mutex)
+{
+	if (pthread_mutex_init(mutex, NULL) != 0) {
+		FAIL();
+	}
+}
+
+
+void osMutexFree(OsMutex *mutex)
+{
+	if (pthread_mutex_destroy(mutex) != 0) {
+		FAIL();
+	}
+}
+
+
+void osMutexLock(OsMutex *mutex)
+{
+	if (pthread_mutex_lock(mutex) != 0) {
+		FAIL();
+	}
+}
+
+
+void osMutexUnlock(OsMutex *mutex)
+{
+	if (pthread_mutex_unlock(mutex) != 0) {
+		FAIL();
+	}
+}
+
+
 void osSleep(uint64_t microseconds)
 {
 	struct timespec toSleep = {

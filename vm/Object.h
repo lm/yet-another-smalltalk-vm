@@ -120,6 +120,12 @@ OBJECT_HANDLE(Process);
 
 typedef struct {
 	OBJECT_HEADER;
+	OsMutex osMutex;
+} RawMutex;
+OBJECT_HANDLE(Mutex);
+
+typedef struct {
+	OBJECT_HEADER;
 	Value microseconds;
 } RawDelay;
 OBJECT_HANDLE(Delay);
@@ -145,6 +151,7 @@ static InstanceShape BlockShape = DEFINE_INST_SHAPE(1, 0, 0, 0, 0);
 static InstanceShape ContextShape = DEFINE_INST_SHAPE(2, 0, 1, 0, VALUE_POINTER);
 static InstanceShape ExceptionHandlerShape = DEFINE_INST_SHAPE(1, 2, 0, 0, VALUE_POINTER);
 static InstanceShape ProcessShape = DEFINE_INST_SHAPE(sizeof(OsThread) / sizeof(Value) + 1, 0, 0, 0, 0);
+static InstanceShape MutexShape = DEFINE_INST_SHAPE(sizeof(OsMutex) / sizeof(Value), 0, 0, 0, 0);
 
 #define varOffset(type, member) (offsetof(type, member) - 1)
 
