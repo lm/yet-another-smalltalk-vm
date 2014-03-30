@@ -18,15 +18,15 @@ static void initSmalltalkStubs(void);
 static Class *newStubClass(Class *metaClass, InstanceShape shape, size_t instanceSize);
 static Class *newStubMetaClass(InstanceShape shape, size_t instanceSize);
 static Object *newStubObject(size_t size);
-static void parseKernelFiles(char *kernelDir);
+static _Bool parseKernelFiles(char *kernelDir);
 
 
-void bootstrap(char *kernelDir)
+_Bool bootstrap(char *kernelDir)
 {
 	initSmalltalkStubs();
 	initThread(&CurrentThread);
 	registerPrimitives();
-	parseKernelFiles(kernelDir);
+	return parseKernelFiles(kernelDir);
 }
 
 
@@ -220,11 +220,8 @@ static Object *newStubObject(size_t size)
 }
 
 
-static void parseKernelFiles(char *kernelDir)
+static _Bool parseKernelFiles(char *kernelDir)
 {
-	HandleScope scope;
-	openHandleScope(&scope);
-
 	char *kernelFiles[] = {
 		"Object.st",
 		"UndefinedObject.st",
@@ -326,6 +323,9 @@ static void parseKernelFiles(char *kernelDir)
 		"AssertError.st",
 	};
 
+	HandleScope scope;
+	openHandleScope(&scope);
+
 	Array *classInstanceVariables = newArray(classGetInstanceShape(Handles.Class).varsSize);
 	arrayAtPutObject(classInstanceVariables, 0, (Object *) asString("superClass"));
 	arrayAtPutObject(classInstanceVariables, 1, (Object *) asString("subClasses"));
@@ -345,7 +345,10 @@ static void parseKernelFiles(char *kernelDir)
 		memcpy(fileName, kernelDir, kernelDirNameSize);
 		fileName[kernelDirNameSize] = '/';
 		memcpy(fileName + kernelDirNameSize + 1, kernelFiles[i], fileNameSize + 1);
-		parseFile(fileName, NULL, NULL);
+		if (!parseFile(fileName, NULL, NULL)) {
+			closeHandleScope(&scope, NULL);
+			return 0;
+		}
 	}
 
 	Iterator iterator;
@@ -365,4 +368,5 @@ static void parseKernelFiles(char *kernelDir)
 	}
 
 	closeHandleScope(&scope, NULL);
+	return 1;
 }

@@ -57,7 +57,10 @@ static void bootstrapSmalltalk(char *snapshotFileName, char *bootstrapDir)
 			printf("Cannot write to snapshot file: '%s'\n", snapshotFileName);
 			exit(EXIT_FAILURE);
 		}
-		bootstrap(bootstrapDir);
+		if (!bootstrap(bootstrapDir)) {
+			printf("Bootstrap failed\n");
+			exit(EXIT_FAILURE);
+		}
 		snapshotWrite(snapshot);
 	} else {
 		snapshot = fopen(snapshotFileName, "r");
