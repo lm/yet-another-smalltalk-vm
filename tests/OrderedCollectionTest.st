@@ -31,3 +31,7 @@
 
 	Assert do: [OrderedCollection new last] expect: Error.
 ]
+
+[
+	Assert true: (OrderedCollection new add: 1; add: 2; add: 3; yourself) asArray = #(1 2 3).
+]

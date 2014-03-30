@@ -270,4 +270,11 @@ Collection subclass: SequenceableCollection [
 		^self copyFrom: (self indexOf: anObject ifAbsent: [self size]) + 1
 	]
 
+
+	"converting"
+
+	asArray [
+		^(Array new: self size) replaceFrom: 1 to: self size with: self
+	]
+
 ]
