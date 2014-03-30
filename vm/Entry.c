@@ -165,6 +165,7 @@ _Bool parseFile(char *filename, OrderedCollection *classes, OrderedCollection *b
 
 	if (file == NULL) {
 		printf("Cannot open file '%s' (errno: %i)\n", filename, errno);
+		closeHandleScope(&scope, NULL);
 		return 0;
 	}
 	initFileParser(&parser, file, asString(filename));
@@ -174,6 +175,7 @@ _Bool parseFile(char *filename, OrderedCollection *classes, OrderedCollection *b
 			BlockNode *node = parseBlock(&parser);
 			if (node == NULL) {
 				printParseError(&parser, filename);
+				closeHandleScope(&scope, NULL);
 				return 0;
 			}
 			ordCollAddObject(blocks, (Object *) node);
@@ -181,12 +183,14 @@ _Bool parseFile(char *filename, OrderedCollection *classes, OrderedCollection *b
 			ClassNode *node = parseClass(&parser);
 			if (node == NULL) {
 				printParseError(&parser, filename);
+				closeHandleScope(&scope, NULL);
 				return 0;
 			}
 
 			Object *class = buildClass(node);
 			if (isCompileError(class)) {
 				printCompileError((CompileError *) class);
+				closeHandleScope(&scope, NULL);
 				return 0;
 			}
 
