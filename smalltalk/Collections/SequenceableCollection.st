@@ -6,7 +6,7 @@ Collection subclass: SequenceableCollection [
 		| hash |
 
 		hash := self class hash.
-		self do: [ :v | hash := hash + v hash].
+		self do: [ :v | hash := hash bitXor: v hash].
 		^hash
 	]
 
