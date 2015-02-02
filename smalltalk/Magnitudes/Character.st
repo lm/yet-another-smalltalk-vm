@@ -136,6 +136,10 @@ Magnitude subclass: Character [
 
 	"comparing"
 
+	hash [
+		^0 - self codePoint
+	]
+
 	< aCharacter [
 		^self codePoint < aCharacter codePoint
 	]
