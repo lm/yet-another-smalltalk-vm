@@ -1009,7 +1009,7 @@ static void generateBlockWhileTrue(CodeGenerator *generator)
 	asmJ(buffer, COND_EQUAL, &loop);
 
 	// return receiver
-	asmMovqMem(buffer, asmMem(RSP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RAX);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RAX);
 	asmAddqImm(buffer, RSP, 4 * sizeof(intptr_t));
 	asmPopq(buffer, RBP);
 	asmRet(buffer);
@@ -1059,7 +1059,7 @@ static void generateBlockWhileTrue2(CodeGenerator *generator)
 
 	// return receiver
 	asmLabelBind(buffer, &end, asmOffset(buffer));
-	asmMovqMem(buffer, asmMem(RSP, NO_REGISTER, SS_1, 4 * sizeof(intptr_t)), RAX);
+	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RAX);
 	asmAddqImm(buffer, RSP, 3 * sizeof(intptr_t));
 	asmPopq(buffer, RBP);
 	asmRet(buffer);

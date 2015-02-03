@@ -16,3 +16,11 @@ Object subclass: BlockTest [
 	Assert do: [[ :a | ] value] expect: OutOfRangeError.
 	Assert do: [[ :a | ] value: 1 value: 2] expect: OutOfRangeError.
 ]
+
+[
+	| block |
+
+	block := [false].
+	Assert true: block whileTrue == block.
+	Assert true: (block whileTrue: []) == block.
+]
