@@ -977,9 +977,10 @@ static void generateBlockValueArgsPrimitive(CodeGenerator *generator)
 static void generateBlockWhileTrue(CodeGenerator *generator)
 {
 	AssemblerBuffer *buffer = &generator->buffer;
-	ptrdiff_t compiledCodeOffset = offsetof(NativeCode, compiledCode) - offsetof(NativeCode, insts);
 	AssemblerLabel loop;
+	AssemblerLabel notBoolean;
 	asmInitLabel(&loop);
+	asmInitLabel(&notBoolean);
 
 	asmPushq(buffer, RBP);
 	asmMovq(buffer, RSP, RBP);
@@ -997,8 +998,10 @@ static void generateBlockWhileTrue(CodeGenerator *generator)
 
 	// value block
 	asmLabelBind(buffer, &loop, asmOffset(buffer));
+	// copy receiver in loop again as #blockValue replaces it
 	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), TMP);
 	asmMovqToMem(buffer, TMP, asmMem(RSP, NO_REGISTER, SS_1, 0));
+	// call block native code
 	asmMovqMem(buffer, asmMem(RSP, NO_REGISTER, SS_1, sizeof(intptr_t)), R11);
 	asmCallq(buffer, R11);
 	generateStackmap(generator);
@@ -1008,11 +1011,22 @@ static void generateBlockWhileTrue(CodeGenerator *generator)
 	asmCmpq(buffer, RAX, TMP);
 	asmJ(buffer, COND_EQUAL, &loop);
 
+	// check if result is false
+	generateLoadObject(buffer, Handles.false->raw, TMP, 1);
+	asmCmpq(buffer, RAX, TMP);
+	asmJ(buffer, COND_NOT_EQUAL, &notBoolean);
+
 	// return receiver
 	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RAX);
 	asmAddqImm(buffer, RSP, 4 * sizeof(intptr_t));
 	asmPopq(buffer, RBP);
 	asmRet(buffer);
+
+	// not boolean
+	asmLabelBind(buffer, &notBoolean, asmOffset(buffer));
+	asmAddqImm(buffer, RSP, 3 * sizeof(intptr_t));
+	asmPopq(buffer, R11);
+	asmPopq(buffer, RBP);
 }
 
 
@@ -1022,8 +1036,10 @@ static void generateBlockWhileTrue2(CodeGenerator *generator)
 	ptrdiff_t compiledCodeOffset = offsetof(NativeCode, compiledCode) - offsetof(NativeCode, insts);
 	AssemblerLabel loop;
 	AssemblerLabel end;
+	AssemblerLabel notBoolean;
 	asmInitLabel(&loop);
 	asmInitLabel(&end);
+	asmInitLabel(&notBoolean);
 
 	asmPushq(buffer, RBP);
 	asmMovq(buffer, RSP, RBP);
@@ -1045,6 +1061,7 @@ static void generateBlockWhileTrue2(CodeGenerator *generator)
 	generateStackmap(generator);
 	asmAddqImm(buffer, RSP, sizeof(intptr_t));
 
+	// repeat if result is true
 	generateLoadObject(buffer, Handles.true->raw, TMP, 1);
 	asmCmpq(buffer, RAX, TMP);
 	asmJ(buffer, COND_NOT_EQUAL, &end);
@@ -1057,12 +1074,25 @@ static void generateBlockWhileTrue2(CodeGenerator *generator)
 	asmAddqImm(buffer, RSP, sizeof(intptr_t));
 	asmJmpLabel(buffer, &loop);
 
-	// return receiver
+	// result is not true
 	asmLabelBind(buffer, &end, asmOffset(buffer));
+
+	// check if result is false
+	generateLoadObject(buffer, Handles.false->raw, TMP, 1);
+	asmCmpq(buffer, RAX, TMP);
+	asmJ(buffer, COND_NOT_EQUAL, &notBoolean);
+
+	// return receiver
 	asmMovqMem(buffer, asmMem(RBP, NO_REGISTER, SS_1, 2 * sizeof(intptr_t)), RAX);
 	asmAddqImm(buffer, RSP, 3 * sizeof(intptr_t));
 	asmPopq(buffer, RBP);
 	asmRet(buffer);
+
+	// not boolean
+	asmLabelBind(buffer, &notBoolean, asmOffset(buffer));
+	asmAddqImm(buffer, RSP, 2 * sizeof(intptr_t));
+	asmPopq(buffer, R11);
+	asmPopq(buffer, RBP);
 }
 
 

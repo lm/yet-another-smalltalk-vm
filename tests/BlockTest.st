@@ -24,3 +24,12 @@ Object subclass: BlockTest [
 	Assert true: block whileTrue == block.
 	Assert true: (block whileTrue: []) == block.
 ]
+
+[
+	Assert do: [[] whileTrue] expect: Error.
+	Assert do: [[1] whileTrue] expect: Error.
+	Assert do: [[Object] whileTrue] expect: Error.
+	Assert do: [[] whileTrue: []] expect: Error.
+	Assert do: [[1] whileTrue: []] expect: Error.
+	Assert do: [[Object] whileTrue: []] expect: Error.
+]

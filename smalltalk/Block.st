@@ -63,6 +63,7 @@ Object subclass: Block [
 
 	whileTrue: aBlock [
 		<primitive: BlockWhileTrue2Primitive>
+		Error signal: self printString, ' must return a ', Boolean printString.
 	]
 
 
@@ -73,6 +74,7 @@ Object subclass: Block [
 
 	whileTrue [
 		<primitive: BlockWhileTruePrimitive>
+		Error signal: self printString, ' must return a ', Boolean printString.
 	]
 
 
