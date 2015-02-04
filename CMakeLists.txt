@@ -8,12 +8,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_C_FLAGS "-std=gnu99 -pedantic -Wno-flexible-array-extensions -Wno-c11-extensions -Wno-gnu")
 #set(CMAKE_C_FLAGS "-std=gnu99 -pedantic -Wno-flexible-array-extensions -Wno-c11-extensions -fsanitize=undefined")
 
-find_package(Threads)
-
-add_library(CityHash STATIC cityhash/city.c)
-add_library(Linenoise STATIC linenoise/linenoise.c)
-
-set(sources
+set(vmSources
 	vm/Bootstrap.c
 	vm/Class.c
 	vm/CodeGeneratorX64.c
@@ -49,10 +44,13 @@ set(sources
 	vm/Tokenizer.c
 )
 
-add_library(VM STATIC ${sources})
-target_link_libraries(VM CityHash)
-
+find_package(Threads)
+add_library(CityHash SHARED cityhash/city.c)
+add_library(Linenoise SHARED linenoise/linenoise.c)
+add_library(VM SHARED ${vmSources})
 add_executable(st main.c)
-target_link_libraries(st ${CMAKE_THREAD_LIBS_INIT})
+
+target_link_libraries(VM CityHash)
+target_link_libraries(VM Linenoise)
+target_link_libraries(VM ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(st VM)
-target_link_libraries(st Linenoise)
