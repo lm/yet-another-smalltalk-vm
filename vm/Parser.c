@@ -72,7 +72,7 @@ static void errorExpected(Parser *parser, TokenType tokens);
 
 void initParser(Parser *parser, String *source)
 {
-	char *buffer = malloc(source->raw->size);
+	char *buffer = malloc(source->raw->size + 1);
 	stringPrintOn(source, buffer);
 	initTokenizer(&parser->tokenizer, buffer);
 	parser->sourceOrFileName = source;
