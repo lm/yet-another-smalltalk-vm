@@ -120,19 +120,23 @@ Integer subclass: SmallInteger [
 				n := self.
 				bit := 0].
 
-		[n > 1073741823] whileTrue: [
-			bit := bit + 30.
-			n := n bitShift: -30].
+		[n > 16r1FFFFFFFFFFFFFFF] whileTrue: [
+			bit := bit + 62.
+			n := n bitShift: -62].
 
-		n > 65535 ifTrue: [
+		n > 16rFFFFFFFF ifTrue: [
+			bit := bit + 32.
+			n := n bitShift: -32].
+
+		n > 16rFFFF ifTrue: [
 			bit := bit + 16.
 			n := n bitShift: -16].
 
-		n > 255 ifTrue: [
+		n > 16rFF ifTrue: [
 			bit := bit + 8.
 			n := n bitShift: -8].
 
-		n > 15 ifTrue: [
+		n > 16rF ifTrue: [
 			bit := bit + 4.
 			n := n bitShift: -4].
 
