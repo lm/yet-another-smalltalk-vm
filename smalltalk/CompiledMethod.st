@@ -44,7 +44,7 @@ CompiledCode subclass: CompiledMethod [
 	"printing"
 
 	printOn: aStream [
-		ownerClass printOn: aStream.
+		ownerClass basicPrintOn: aStream.
 		selector printOn: aStream.
 	]
 

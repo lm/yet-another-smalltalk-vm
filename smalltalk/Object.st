@@ -264,14 +264,14 @@ nil subclass: Object [
 				nextPutAll: ': '.
 			(self instVarAt: i) == self
 				ifTrue: [aStream nextPutAll: 'self (recursion)']
-				ifFalse: [(self instVarAt: i) printOn: aStream].
+				ifFalse: [(self instVarAt: i) basicPrintOn: aStream].
 			aStream lf].
 
 		1 to: self basicSize do: [ :i |
 			aStream nextPutAll: ' - '.
 			(self basicAt: i) == self
 				ifTrue: [aStream nextPutAll: 'self (recursion)']
-				ifFalse: [(self basicAt: i) printOn: aStream].
+				ifFalse: [(self basicAt: i) basicPrintOn: aStream].
 			aStream lf].
 	]
 

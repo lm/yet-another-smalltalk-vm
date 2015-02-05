@@ -38,9 +38,9 @@ Object subclass: Association [
 	"printing"
 
 	printOn: aStream [
-		key == self ifTrue: [aStream nextPutAll: '(recursion)'] ifFalse: [key printOn: aStream].
+		key == self ifTrue: [aStream nextPutAll: '(recursion)'] ifFalse: [key basicPrintOn: aStream].
 		aStream nextPutAll: '->'.
-		value == self ifTrue: [aStream nextPutAll: '(recursion)'] ifFalse: [value printOn: aStream].
+		value == self ifTrue: [aStream nextPutAll: '(recursion)'] ifFalse: [value basicPrintOn: aStream].
 	]
 
 ]

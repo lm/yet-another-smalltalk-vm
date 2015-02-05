@@ -180,7 +180,7 @@ HashedCollection subclass: Dictionary [
 				^self].
 			v value == self
 				ifTrue: [
-					v key printOn: aStream.
+					v key basicPrintOn: aStream.
 					aStream nextPutAll: '->self(recursion)']
 				ifFalse: [
 					v printOn: aStream].

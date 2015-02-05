@@ -91,7 +91,7 @@ Iterator subclass: Collection [
 				^self].
 			v == self
 				ifTrue: [aStream nextPutAll: 'self(recursion)']
-				ifFalse: [v printOn: aStream].
+				ifFalse: [v basicPrintOn: aStream].
 			aStream space].
 		aStream nextPut: $).
 	]
