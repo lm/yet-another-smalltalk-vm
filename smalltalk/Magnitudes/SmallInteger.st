@@ -14,7 +14,7 @@ Integer subclass: SmallInteger [
 
 	< aNumber [
 		 <primitive: IntLessThanPrimitive>
-		 Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
@@ -22,26 +22,26 @@ Integer subclass: SmallInteger [
 
 	+ aNumber [
 		<primitive: IntAddPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	- aNumber [
 		<primitive: IntSubPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	* aNumber [
 		<primitive: IntMulPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	/ aNumber [
 		"IntDiv"
 		<primitive: IntQuoPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
@@ -52,25 +52,25 @@ Integer subclass: SmallInteger [
 
 	\\ aNumber [
 		<primitive: IntModPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	quo: aNumber [
 		<primitive: IntQuoPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	rem: aNumber [
 		<primitive: IntRemPrimitive>
-		Error signal.
+		^self primitiveFailedFor: aNumber.
 	]
 
 
 	negated [
 		<primitive: IntNegPrimitive>
-		Error signal.
+		^self primitiveFailedFor: self.
 	]
 
 
@@ -78,25 +78,25 @@ Integer subclass: SmallInteger [
 
 	bitAnd: anInteger [
 		<primitive: IntAndPrimitive>
-		Error signal.
+		^self primitiveFailedFor: anInteger.
 	]
 
 
 	bitOr: anInteger [
 		<primitive: IntOrPrimitive>
-		Error signal.
+		^self primitiveFailedFor: anInteger.
 	]
 
 
 	bitXor: anInteger [
 		<primitive: IntXorPrimitive>
-		Error signal.
+		^self primitiveFailedFor: anInteger.
 	]
 
 
 	bitShift: anInteger [
 		<primitive: IntShiftPrimitive>
-		Error signal.
+		^self primitiveFailedFor: anInteger.
 	]
 
 
@@ -162,6 +162,12 @@ Integer subclass: SmallInteger [
 
 	asObject [
 		<primitive: IntAsObjectPrimitive>
+	]
+
+
+	primitiveFailedFor: aNumber [
+		(aNumber isKindOf: Number) ifFalse: [Error signal: aNumber asString, ' is not a Number'].
+		Error signal: 'Integer overflow'. "TODO: add support for large integer"
 	]
 
 
