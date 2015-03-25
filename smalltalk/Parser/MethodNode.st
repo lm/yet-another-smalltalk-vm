@@ -1,4 +1,4 @@
-Object subclass: MethodNode [
+MethodNode := Object [
 
 	| className selector pragmas body sourceCode |
 

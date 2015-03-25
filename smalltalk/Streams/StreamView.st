@@ -1,4 +1,4 @@
-PositionableStream subclass: StreamView [
+StreamView := PositionableStream [
 
 	| stream position limit |
 

@@ -1,4 +1,4 @@
-CompileError subclass: UndefinedVariableError [
+UndefinedVariableError := CompileError [
 
 	"accessing"
 

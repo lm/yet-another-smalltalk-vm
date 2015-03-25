@@ -1,4 +1,4 @@
-Error subclass: ParseError [
+ParseError := Error [
 
 	| token sourceCode |
 

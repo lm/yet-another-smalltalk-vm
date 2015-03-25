@@ -1,4 +1,4 @@
-Object subclass: Context [
+Context := Object [
 
 	<shape: ContextShape>
 

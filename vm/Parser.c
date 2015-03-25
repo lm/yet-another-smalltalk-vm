@@ -128,22 +128,17 @@ ClassNode *parseClass(Parser *parser)
 
 	ClassNode *class = newObject(Handles.ClassNode, 0);
 	SourceCode *sourceCode = createSourceCode(parser, 0);
-	Token *token = currentToken(&parser->tokenizer);
 	OrderedCollection *tmp;
 
 	classNodeSetSourceCode(class, sourceCode);
 
 	EXPECT_TOKEN(TOKEN_IDENTIFIER, closeHandleScope(&scope, NULL));
-	classNodeSetSuperName(class, parseVariable(parser));
-
-	EXPECT_TOKEN(TOKEN_KEYWORD, closeHandleScope(&scope, NULL));
-	if (strcmp(currentToken(&parser->tokenizer)->content, "subclass:") != 0) {
-		errorExpected(parser, TOKEN_KEYWORD);
-		return closeHandleScope(&scope, NULL);
-	}
-
-	NEXT_EXPECT_TOKEN(token, TOKEN_IDENTIFIER, closeHandleScope(&scope, NULL));
 	classNodeSetName(class, parseVariable(parser));
+
+	SKIP_TOKEN(TOKEN_ASSIGN, closeHandleScope(&scope, NULL));
+
+	EXPECT_TOKEN(TOKEN_IDENTIFIER, closeHandleScope(&scope, NULL));
+	classNodeSetSuperName(class, parseVariable(parser));
 
 	SKIP_TOKEN(TOKEN_OPEN_SQUARE_BRACKET, closeHandleScope(&scope, NULL));
 

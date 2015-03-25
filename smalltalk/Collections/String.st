@@ -1,4 +1,4 @@
-ArrayedCollection subclass: String [
+String := ArrayedCollection [
 
 	<shape: StringShape>
 

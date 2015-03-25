@@ -1,4 +1,4 @@
-SourceCode subclass: FileSourceCode [
+FileSourceCode := SourceCode [
 
 	"accessing"
 

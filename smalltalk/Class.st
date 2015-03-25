@@ -1,4 +1,4 @@
-ClassDescription subclass: Class [
+Class := ClassDescription [
 
 	| name comment category classVariables |
 

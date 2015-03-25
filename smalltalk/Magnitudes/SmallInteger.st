@@ -1,4 +1,4 @@
-Integer subclass: SmallInteger [
+SmallInteger := Integer [
 
 	"comparing"
 

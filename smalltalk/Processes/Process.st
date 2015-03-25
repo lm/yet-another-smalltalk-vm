@@ -1,4 +1,4 @@
-Object subclass: Process [
+Process := Object [
 
 	terminate [
 		<primitive: ExitPrimitive>

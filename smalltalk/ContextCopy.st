@@ -1,4 +1,4 @@
-Context subclass: ContextCopy [
+ContextCopy := Context [
 
 	| receiver arguments temporaries |
 

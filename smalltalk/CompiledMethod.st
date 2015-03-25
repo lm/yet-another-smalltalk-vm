@@ -1,4 +1,4 @@
-CompiledCode subclass: CompiledMethod [
+CompiledMethod := CompiledCode [
 
 	| literals selector ownerClass sourceCode descriptors |
 

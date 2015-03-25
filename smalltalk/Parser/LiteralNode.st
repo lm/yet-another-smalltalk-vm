@@ -1,4 +1,4 @@
-Object subclass: LiteralNode [
+LiteralNode := Object [
 
 	| value sourceCode |
 

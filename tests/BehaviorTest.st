@@ -1,4 +1,4 @@
-Object subclass: BehaviorFooClass [
+BehaviorFooClass := Object [
 
 	foo [
 

@@ -1,4 +1,4 @@
-Exception subclass: NotFoundError [
+NotFoundError := Exception [
 
 	| value |
 

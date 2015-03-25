@@ -1,4 +1,4 @@
-Number subclass: Integer [
+Integer := Number [
 
 	"arithmetic"
 

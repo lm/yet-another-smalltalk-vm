@@ -1,4 +1,4 @@
-Error subclass: ShouldNotImplement [
+ShouldNotImplement := Error [
 
 	"accessing"
 

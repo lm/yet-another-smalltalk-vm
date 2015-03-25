@@ -1,4 +1,4 @@
-BufferedStream subclass: ExternalStream [
+ExternalStream := BufferedStream [
 
 	| descriptor |
 

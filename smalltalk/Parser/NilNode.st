@@ -1,4 +1,4 @@
-LiteralNode subclass: NilNode [
+NilNode := LiteralNode [
 
 	acceptVisitor: aVisitor [
 		aVisitor visitNilNode: self.

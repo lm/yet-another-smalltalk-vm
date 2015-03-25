@@ -1,4 +1,4 @@
-Object subclass: ProcessorScheduler [
+ProcessorScheduler := Object [
 
 	class initialize [
 		Processor := self new.

@@ -1,3 +1,3 @@
-Object subclass: Foo [
+Foo := Object [
 
 ]

@@ -1,4 +1,4 @@
-Collection subclass: HashedCollection [
+HashedCollection := Collection [
 
 	| contents tally |
 

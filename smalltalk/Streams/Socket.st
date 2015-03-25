@@ -1,4 +1,4 @@
-ExternalStream subclass: Socket [
+Socket := ExternalStream [
 
 	"instance creation"
 

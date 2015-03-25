@@ -1,3 +1,3 @@
-CompileError subclass: InvalidPragmaError [
+InvalidPragmaError := CompileError [
 
 ]

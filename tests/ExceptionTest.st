@@ -1,4 +1,4 @@
-Object subclass: ExceptionTest [
+ExceptionTest := Object [
 
 	class outerReturnWithinHandleBlock [
 		[Exception signal] on: Exception do: [ :e | ^e].

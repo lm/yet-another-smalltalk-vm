@@ -1,4 +1,4 @@
-Object subclass: ClassNode [
+ClassNode := Object [
 
 	| name superName pragmas variables methods sourceCode |
 

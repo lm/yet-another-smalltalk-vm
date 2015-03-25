@@ -1,4 +1,4 @@
-Error subclass: IoError [
+IoError := Error [
 
 	"instance creation"
 

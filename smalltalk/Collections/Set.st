@@ -1,4 +1,4 @@
-HashedCollection subclass: Set [
+Set := HashedCollection [
 
 	"instance creation"
 

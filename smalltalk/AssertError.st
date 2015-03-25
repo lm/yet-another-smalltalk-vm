@@ -1,4 +1,4 @@
-Error subclass: AssertError [
+AssertError := Error [
 
 	| expected actual |
 

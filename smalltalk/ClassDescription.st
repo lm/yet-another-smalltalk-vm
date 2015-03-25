@@ -1,3 +1,3 @@
-Behavior subclass: ClassDescription [
+ClassDescription := Behavior [
 
 ]

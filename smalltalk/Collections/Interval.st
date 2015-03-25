@@ -1,4 +1,4 @@
-ArrayedCollection subclass: Interval [
+Interval := ArrayedCollection [
 
 	<shape: FixedShape>
 

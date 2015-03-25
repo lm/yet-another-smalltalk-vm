@@ -1,4 +1,4 @@
-CompiledCode subclass: CompiledBlock [
+CompiledBlock := CompiledCode [
 
 	| method sourceCode descriptors |
 

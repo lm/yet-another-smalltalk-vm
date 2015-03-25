@@ -1,4 +1,4 @@
-LiteralNode subclass: VariableNode [
+VariableNode := LiteralNode [
 
 	name [
 		^self value

@@ -1,4 +1,4 @@
-Stream subclass: PositionableStream [
+PositionableStream := Stream [
 
 	"accessing"
 

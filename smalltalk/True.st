@@ -1,4 +1,4 @@
-Boolean subclass: True [
+True := Boolean [
 
 	"logical operations"
 

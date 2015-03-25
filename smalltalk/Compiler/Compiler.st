@@ -1,4 +1,4 @@
-Object subclass: Compiler [
+Compiler := Object [
 
 	includeFile: aString [
 		| stream parser classes |

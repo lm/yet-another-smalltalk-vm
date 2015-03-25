@@ -1,4 +1,4 @@
-Error subclass: OutOfRangeError [
+OutOfRangeError := Error [
 
 	| value min max |
 

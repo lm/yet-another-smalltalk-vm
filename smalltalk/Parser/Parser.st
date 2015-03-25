@@ -1,4 +1,4 @@
-Object subclass: Parser [
+Parser := Object [
 
 	| stream source atEnd |
 

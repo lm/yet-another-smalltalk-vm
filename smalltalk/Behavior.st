@@ -1,4 +1,4 @@
-Object subclass: Behavior [
+Behavior := Object [
 
 	| superClass subClasses methodDictionary instanceShape instanceVariables |
 

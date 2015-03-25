@@ -1,4 +1,4 @@
-Object subclass: VMTools [
+VMTools := Object [
 
 	class printCCharacters [
 		0 to: 255 do: [ :i |

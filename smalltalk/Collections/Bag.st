@@ -1,4 +1,4 @@
-Collection subclass: Bag [
+Bag := Collection [
 
 	<shape: IndexedShape>
 

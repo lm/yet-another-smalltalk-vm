@@ -1,4 +1,4 @@
-Object subclass: TestIndexedObject [
+TestIndexedObject := Object [
 
 	<shape: IndexedShape>
 

@@ -1,4 +1,4 @@
-LiteralNode subclass: ArrayNode [
+ArrayNode := LiteralNode [
 
 	acceptVisitor: aVisitor [
 		aVisitor visitArrayNode: self.

@@ -1,4 +1,4 @@
-Object subclass: Message [
+Message := Object [
 
 	| selector arguments |
 

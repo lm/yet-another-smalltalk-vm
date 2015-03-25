@@ -1,4 +1,4 @@
-Context subclass: BlockContext [
+BlockContext := Context [
 
 	"accessing"
 

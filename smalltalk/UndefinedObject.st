@@ -1,4 +1,4 @@
-Object subclass: UndefinedObject [
+UndefinedObject := Object [
 
 	"testing"
 

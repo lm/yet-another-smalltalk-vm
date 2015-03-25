@@ -1,4 +1,4 @@
-String subclass: Symbol [
+Symbol := String [
 
 	"comparing"
 

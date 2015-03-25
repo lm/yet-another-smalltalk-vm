@@ -1,4 +1,4 @@
-SequenceableCollection subclass: ArrayedCollection [
+ArrayedCollection := SequenceableCollection [
 
 	<shape: IndexedShape>
 

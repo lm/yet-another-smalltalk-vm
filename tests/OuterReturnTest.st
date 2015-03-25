@@ -1,4 +1,4 @@
-Object subclass: OuterReturnTest [
+OuterReturnTest := Object [
 
 	class createBlock [
 		^[^1]

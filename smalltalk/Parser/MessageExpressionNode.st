@@ -1,4 +1,4 @@
-Object subclass: MessageExpressionNode [
+MessageExpressionNode := Object [
 
 	| selector arguments sourceCode |
 

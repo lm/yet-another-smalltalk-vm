@@ -1,3 +1,3 @@
-Exception subclass: Error [
+Error := Exception [
 
 ]

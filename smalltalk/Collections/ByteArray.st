@@ -1,4 +1,4 @@
-ArrayedCollection subclass: ByteArray [
+ByteArray := ArrayedCollection [
 
 	<shape: BytesShape>
 

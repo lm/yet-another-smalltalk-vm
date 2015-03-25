@@ -1,4 +1,4 @@
-Object subclass: Debugger [
+Debugger := Object [
 
 	class break [
 		<primitive: InterruptPrimitive>

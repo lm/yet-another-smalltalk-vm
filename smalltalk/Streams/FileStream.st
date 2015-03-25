@@ -1,4 +1,4 @@
-ExternalStream subclass: FileStream [
+FileStream := ExternalStream [
 
 	| name |
 

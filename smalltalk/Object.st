@@ -1,4 +1,4 @@
-nil subclass: Object [
+Object := nil [
 
 	"accessing"
 

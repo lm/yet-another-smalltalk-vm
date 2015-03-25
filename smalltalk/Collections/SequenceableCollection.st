@@ -1,4 +1,4 @@
-Collection subclass: SequenceableCollection [
+SequenceableCollection := Collection [
 
 	"comparing"
 

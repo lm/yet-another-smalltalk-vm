@@ -1,4 +1,4 @@
-Object subclass: CompiledCode [
+CompiledCode := Object [
 
 	<shape: CompiledCodeShape>
 

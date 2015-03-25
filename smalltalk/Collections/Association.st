@@ -1,4 +1,4 @@
-Object subclass: Association [
+Association := Object [
 
 	| key value |
 

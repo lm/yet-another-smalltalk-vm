@@ -1,4 +1,4 @@
-Object subclass: Block [
+Block := Object [
 
 	<shape: BlockShape>
 

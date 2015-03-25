@@ -1,4 +1,4 @@
-Error subclass: MessageNotUnderstood [
+MessageNotUnderstood := Error [
 
 	| receiver message |
 

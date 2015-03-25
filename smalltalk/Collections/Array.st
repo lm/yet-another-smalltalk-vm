@@ -1,3 +1,3 @@
-ArrayedCollection subclass: Array [
+Array := ArrayedCollection [
 
 ]

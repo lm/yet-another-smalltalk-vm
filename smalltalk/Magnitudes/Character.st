@@ -1,4 +1,4 @@
-Magnitude subclass: Character [
+Character := Magnitude [
 
 	| Table |
 

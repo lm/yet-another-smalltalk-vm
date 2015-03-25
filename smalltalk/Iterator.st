@@ -1,4 +1,4 @@
-Object subclass: Iterator [
+Iterator := Object [
 
 	"enumerating"
 

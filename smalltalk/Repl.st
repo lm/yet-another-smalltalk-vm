@@ -1,4 +1,4 @@
-Object subclass: Repl [
+Repl := Object [
 
 	class autocomplete: aString [
 		| completions index part |

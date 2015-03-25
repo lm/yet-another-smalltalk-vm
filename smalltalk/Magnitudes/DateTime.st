@@ -1,4 +1,4 @@
-Magnitude subclass: DateTime [
+DateTime := Magnitude [
 
 	| milliSeconds MillisecondsPerDay DaysIn4Years DaysIn100Years DaysIn400Years
 		Days1970To2000 DaysOffset YearsOffset |

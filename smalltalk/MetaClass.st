@@ -1,4 +1,4 @@
-ClassDescription subclass: MetaClass [
+MetaClass := ClassDescription [
 
 	| instanceClass |
 

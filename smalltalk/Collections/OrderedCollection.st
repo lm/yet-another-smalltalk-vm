@@ -1,4 +1,4 @@
-SequenceableCollection subclass: OrderedCollection [
+OrderedCollection := SequenceableCollection [
 
 	| contents firstIndex lastIndex |
 

@@ -1,4 +1,4 @@
-Object subclass: ExceptionHandler [
+ExceptionHandler := Object [
 
 	<shape: ExceptionHandlerShape>
 

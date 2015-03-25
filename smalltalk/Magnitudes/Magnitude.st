@@ -1,4 +1,4 @@
-Object subclass: Magnitude [
+Magnitude := Object [
 
 	"comparing"
 

@@ -13,7 +13,7 @@
 	Assert true: Foo notNil.
 ]
 
-Object subclass: CompilerTestClassA [
+CompilerTestClassA := Object [
 
 	| ClassVar |
 
@@ -25,7 +25,7 @@ Object subclass: CompilerTestClassA [
 ]
 
 
-CompilerTestClassA subclass: CompilerTestClassB [
+CompilerTestClassB := CompilerTestClassA [
 
 	classVar [
 		^ClassVar

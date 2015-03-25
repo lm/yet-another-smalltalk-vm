@@ -1,4 +1,4 @@
-Object subclass: SourceCode [
+SourceCode := Object [
 
 	| source position sourceSize line column |
 

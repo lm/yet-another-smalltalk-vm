@@ -1,4 +1,4 @@
-Object subclass: BlockNode [
+BlockNode := Object [
 
 	| arguments temporaries expressions scope sourceCode |
 

@@ -1,4 +1,4 @@
-PositionableStream subclass: CollectionStream [
+CollectionStream := PositionableStream [
 
 	| collection position end |
 

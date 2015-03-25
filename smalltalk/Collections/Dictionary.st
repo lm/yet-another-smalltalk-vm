@@ -1,4 +1,4 @@
-HashedCollection subclass: Dictionary [
+Dictionary := HashedCollection [
 
 	"instance creation"
 

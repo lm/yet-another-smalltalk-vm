@@ -1,4 +1,4 @@
-Object subclass: MockNodeVisitor [
+MockNodeVisitor := Object [
 
 	visitClassNode: aNode [
 		Assert true: (aNode isKindOf: ClassNode).
@@ -65,7 +65,7 @@ Object subclass: MockNodeVisitor [
 [ "test valid smalltalk code"
 	| parser |
 
-	parser := Parser parseString: 'Object subclass: Foo []'.
+	parser := Parser parseString: 'Foo := Object []'.
 	Assert true: (parser parseClass isKindOf: ClassNode).
 	parser := Parser parseString: 'foo []'.
 	Assert true: (parser parseMethod isKindOf: MethodNode).
@@ -132,6 +132,6 @@ Object subclass: MockNodeVisitor [
 [ "visitor test"
 	| parser |
 
-	parser := Parser parseString: 'Object subclass: Foo [ bar: a [ | b | b := 1 + 2. #(1 $a). false. true. nil ] ]'.
+	parser := Parser parseString: 'Foo := Object [ bar: a [ | b | b := 1 + 2. #(1 $a). false. true. nil ] ]'.
 	parser parseClass acceptVisitor: MockNodeVisitor new.
 ]

@@ -1,4 +1,4 @@
-Object subclass: Exception [
+Exception := Object [
 
 	| messageText |
 

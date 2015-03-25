@@ -1,4 +1,4 @@
-CompileError subclass: RedefinitionError [
+RedefinitionError := CompileError [
 
 	"accessing"
 

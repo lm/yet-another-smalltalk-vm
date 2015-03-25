@@ -1,4 +1,4 @@
-Magnitude subclass: Number [
+Number := Magnitude [
 
 	"instance creation"
 

@@ -1,4 +1,4 @@
-Object subclass: Assert [
+Assert := Object [
 
 	class true: aBool [
 		aBool ifFalse: [AssertError expected: true got: aBool].

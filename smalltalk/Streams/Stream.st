@@ -1,4 +1,4 @@
-Iterator subclass: Stream [
+Stream := Iterator [
 
 	"accessing"
 

@@ -1,4 +1,4 @@
-CompileError subclass: ReadonlyVariableError [
+ReadonlyVariableError := CompileError [
 
 	"accessing"
 

@@ -1,4 +1,4 @@
-Object subclass: GarbageCollector [
+GarbageCollector := Object [
 
 	class collectGarbage [
 		<primitive: GCPrimitive>

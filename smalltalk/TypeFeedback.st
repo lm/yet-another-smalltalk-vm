@@ -1,4 +1,4 @@
-Object subclass: TypeFeedback [
+TypeFeedback := Object [
 
 	| ic hintedClass |
 

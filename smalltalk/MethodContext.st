@@ -1,4 +1,4 @@
-Context subclass: MethodContext [
+MethodContext := Context [
 
 	"accessing"
 

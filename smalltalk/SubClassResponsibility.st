@@ -1,4 +1,4 @@
-Error subclass: SubClassResponsibility [
+SubClassResponsibility := Error [
 
 	"accessing"
 

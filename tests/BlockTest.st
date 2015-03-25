@@ -1,4 +1,4 @@
-Object subclass: BlockTest [
+BlockTest := Object [
 
 	class outerReturn [
 		[^1] value.

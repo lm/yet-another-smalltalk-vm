@@ -1,4 +1,4 @@
-Object subclass: ServerSocket [
+ServerSocket := Object [
 
 	| descriptor |
 

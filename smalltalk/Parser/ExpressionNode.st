@@ -1,4 +1,4 @@
-Object subclass: ExpressionNode [
+ExpressionNode := Object [
 
 	| returns assigments receiver messageExpressions sourceCode |
 

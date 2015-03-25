@@ -1,4 +1,4 @@
-Object subclass: Boolean [
+Boolean := Object [
 
 	"logical operations"
 

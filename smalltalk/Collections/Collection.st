@@ -1,4 +1,4 @@
-Iterator subclass: Collection [
+Collection := Iterator [
 
 	"accessing"
 

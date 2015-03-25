@@ -1,4 +1,4 @@
-Object subclass: Delay [
+Delay := Object [
 
 	| microseconds |
 

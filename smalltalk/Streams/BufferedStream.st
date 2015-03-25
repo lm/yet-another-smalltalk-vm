@@ -1,4 +1,4 @@
-PositionableStream subclass: BufferedStream [
+BufferedStream := PositionableStream [
 
 	| buffer position buffered atEnd |
 

@@ -1,4 +1,4 @@
-LiteralNode subclass: FalseNode [
+FalseNode := LiteralNode [
 
 	acceptVisitor: aVisitor [
 		aVisitor visitFalseNode: self.
